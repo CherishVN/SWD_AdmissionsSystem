@@ -16,10 +16,16 @@ namespace AdmissionInfoSystem
 
             // Configure PostgreSQL connection (Supabase)
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                "Host=db.rgjnylthyxydbcghbllq.supabase.co;Port=5432;Database=postgres;Username=postgres;Password=IloveYou3000!123";
+                "User Id=postgres.rgjnylthyxydbcghbllq;Password=IloveYou3000!123;Server=aws-0-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres";
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(connectionString));
+                options.UseNpgsql(connectionString, npgsqlOptions =>
+                {
+                    npgsqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorCodesToAdd: null);
+                }));
 
             // Add repositories
             builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
