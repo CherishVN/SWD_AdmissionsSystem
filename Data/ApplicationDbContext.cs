@@ -16,6 +16,9 @@ namespace AdmissionInfoSystem.Data
         public DbSet<AcademicProgram> Programs { get; set; }
         public DbSet<Major> Majors { get; set; }
         public DbSet<Scholarship> Scholarships { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<ChatSession> ChatSessions { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +74,26 @@ namespace AdmissionInfoSystem.Data
                 .HasOne(s => s.University)
                 .WithMany(u => u.Scholarships)
                 .HasForeignKey(s => s.UniversityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // User table
+            modelBuilder.Entity<User>()
+                .ToTable("User");
+
+            // ChatSession table
+            modelBuilder.Entity<ChatSession>()
+                .ToTable("ChatSession")
+                .HasOne(cs => cs.User)
+                .WithMany(u => u.ChatSessions)
+                .HasForeignKey(cs => cs.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ChatMessage table
+            modelBuilder.Entity<ChatMessage>()
+                .ToTable("ChatMessage")
+                .HasOne(cm => cm.ChatSession)
+                .WithMany(cs => cs.ChatMessages)
+                .HasForeignKey(cm => cm.ChatSessionId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

@@ -29,6 +29,9 @@ namespace AdmissionInfoSystem.Models
         [Required]
         public string RankingCriteria { get; set; } = string.Empty;
         
+        // Thêm thuộc tính Locations để lưu trữ các thẻ vị trí
+        public string? Locations { get; set; }
+        
         // Navigation properties
         public virtual ICollection<AdmissionNew> AdmissionNews { get; set; } = new List<AdmissionNew>();
         public virtual ICollection<AdmissionMethod> AdmissionMethods { get; set; } = new List<AdmissionMethod>();
