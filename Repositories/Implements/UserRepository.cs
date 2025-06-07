@@ -34,12 +34,26 @@ namespace AdmissionInfoSystem.Repositories
             if (user == null)
                 return null;
 
-            // Sử dụng BCrypt để kiểm tra mật khẩu
-            bool verified = BCrypt.Net.BCrypt.Verify(password, user.Password);
-            if (!verified)
-                return null;
+            try
+            {
+                // Sử dụng BCrypt để kiểm tra mật khẩu
+                bool verified = BCrypt.Net.BCrypt.Verify(password, user.Password);
+                if (verified)
+                    return user;
+            }
+            catch (SaltParseException)
+            {
+                // Nếu mật khẩu không phải định dạng BCrypt (từ dữ liệu cũ), so sánh trực tiếp
+                if (user.Password == password)
+                {
+                    // Cập nhật mật khẩu sang định dạng BCrypt cho lần đăng nhập sau
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(password);
+                    await _db.SaveChangesAsync();
+                    return user;
+                }
+            }
 
-            return user;
+            return null;
         }
     }
 } 
