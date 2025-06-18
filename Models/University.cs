@@ -32,6 +32,10 @@ namespace AdmissionInfoSystem.Models
         // Thêm thuộc tính Locations để lưu trữ các thẻ vị trí
         public string? Locations { get; set; }
         
+        [Required]
+        [MaxLength(20)]
+        public string Type { get; set; } = "Công lập";
+        
         // Navigation properties
         public virtual ICollection<AdmissionNew> AdmissionNews { get; set; } = new List<AdmissionNew>();
         public virtual ICollection<AdmissionMethod> AdmissionMethods { get; set; } = new List<AdmissionMethod>();

@@ -1,6 +1,10 @@
 using AdmissionInfoSystem.Data;
 using AdmissionInfoSystem.Repositories;
+using AdmissionInfoSystem.Repositories.Implements;
+using AdmissionInfoSystem.Repositories.Interface;
 using AdmissionInfoSystem.Services;
+using AdmissionInfoSystem.Services.Implements;
+using AdmissionInfoSystem.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -40,6 +44,7 @@ namespace AdmissionInfoSystem
             builder.Services.AddScoped<IAcademicProgramRepository, AcademicProgramRepository>();
             builder.Services.AddScoped<IMajorRepository, MajorRepository>();
             builder.Services.AddScoped<IScholarshipRepository, ScholarshipRepository>();
+            builder.Services.AddScoped<IAdmissionScoreRepository, AdmissionScoreRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -51,6 +56,7 @@ namespace AdmissionInfoSystem
             builder.Services.AddScoped<IAcademicProgramService, AcademicProgramService>();
             builder.Services.AddScoped<IMajorService, MajorService>();
             builder.Services.AddScoped<IScholarshipService, ScholarshipService>();
+            builder.Services.AddScoped<IAdmissionScoreService, AdmissionScoreService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
 

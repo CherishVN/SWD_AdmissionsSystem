@@ -19,14 +19,20 @@ namespace AdmissionInfoSystem.Data
         public DbSet<User> Users { get; set; }
         public DbSet<ChatSession> ChatSessions { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<AdmissionScore> AdmissionScores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             // University table
-            modelBuilder.Entity<University>()
-                .ToTable("University");
+            modelBuilder.Entity<University>(entity =>
+            {
+                entity.ToTable("University");
+                entity.Property(e => e.Type)
+                    .HasDefaultValue("Công lập")
+                    .HasMaxLength(20);
+            });
 
             // AdmissionNew table
             modelBuilder.Entity<AdmissionNew>()
@@ -111,6 +117,20 @@ namespace AdmissionInfoSystem.Data
                 .WithMany(cs => cs.ChatMessages)
                 .HasForeignKey(cm => cm.ChatSessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // AdmissionScore table
+            modelBuilder.Entity<AdmissionScore>()
+                .ToTable("AdmissionScore")
+                .HasOne(ads => ads.Major)
+                .WithMany()
+                .HasForeignKey(ads => ads.MajorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AdmissionScore>()
+                .HasOne(ads => ads.AdmissionMethod)
+                .WithMany()
+                .HasForeignKey(ads => ads.AdmissionMethodId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 } 

@@ -1,3 +1,5 @@
+using AdmissionInfoSystem.Repositories.Interface;
+
 namespace AdmissionInfoSystem.Repositories
 {
     public interface IUnitOfWork : IDisposable
@@ -10,6 +12,7 @@ namespace AdmissionInfoSystem.Repositories
         IAcademicProgramRepository AcademicPrograms { get; }
         IMajorRepository Majors { get; }
         IScholarshipRepository Scholarships { get; }
+        IAdmissionScoreRepository AdmissionScores { get; }
         
         Task SaveChangesAsync();
     }

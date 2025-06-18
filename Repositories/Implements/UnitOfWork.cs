@@ -1,4 +1,6 @@
 using AdmissionInfoSystem.Data;
+using AdmissionInfoSystem.Repositories.Implements;
+using AdmissionInfoSystem.Repositories.Interface;
 
 namespace AdmissionInfoSystem.Repositories
 {
@@ -14,6 +16,7 @@ namespace AdmissionInfoSystem.Repositories
         public IAcademicProgramRepository AcademicPrograms { get; private set; }
         public IMajorRepository Majors { get; private set; }
         public IScholarshipRepository Scholarships { get; private set; }
+        public IAdmissionScoreRepository AdmissionScores { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -26,6 +29,7 @@ namespace AdmissionInfoSystem.Repositories
             AcademicPrograms = new AcademicProgramRepository(db);
             Majors = new MajorRepository(db);
             Scholarships = new ScholarshipRepository(db);
+            AdmissionScores = new AdmissionScoreRepository(db);
         }
 
         public async Task SaveChangesAsync()
