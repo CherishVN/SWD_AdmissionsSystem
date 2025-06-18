@@ -77,8 +77,24 @@ namespace AdmissionInfoSystem.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // User table
-            modelBuilder.Entity<User>()
-                .ToTable("User");
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("User");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.HasIndex(e => e.Username).IsUnique();
+                entity.HasIndex(e => e.FirebaseUid).IsUnique();
+                
+                entity.Property(e => e.Role).HasDefaultValue("student");
+                entity.Property(e => e.Provider).HasDefaultValue("email");
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
+                
+                // University relationship
+                entity.HasOne(u => u.University)
+                    .WithMany()
+                    .HasForeignKey(u => u.UniversityId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
 
             // ChatSession table
             modelBuilder.Entity<ChatSession>()

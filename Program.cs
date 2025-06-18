@@ -52,6 +52,7 @@ namespace AdmissionInfoSystem
             builder.Services.AddScoped<IMajorService, MajorService>();
             builder.Services.AddScoped<IScholarshipService, ScholarshipService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IJwtService, JwtService>();
 
             // Cấu hình JWT Authentication
             var jwtKey = builder.Configuration["Jwt:Key"] ?? "ThisIsADefaultSecretKeyForJWTAuthentication12345";
@@ -130,7 +131,7 @@ namespace AdmissionInfoSystem
                 });
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             // Use CORS
             app.UseCors("AllowAll");

@@ -3,6 +3,7 @@ using System;
 using AdmissionInfoSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AdmissionInfoSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250608112500_UpdateUserModelForAuthentication")]
+    partial class UpdateUserModelForAuthentication
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -228,9 +231,6 @@ namespace AdmissionInfoSystem.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("ProgramId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("UniversityId")
                         .HasColumnType("integer");
 
@@ -238,8 +238,6 @@ namespace AdmissionInfoSystem.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ProgramId");
 
                     b.HasIndex("UniversityId");
 
@@ -474,17 +472,11 @@ namespace AdmissionInfoSystem.Migrations
 
             modelBuilder.Entity("AdmissionInfoSystem.Models.Major", b =>
                 {
-                    b.HasOne("AdmissionInfoSystem.Models.AcademicProgram", "Program")
-                        .WithMany("Majors")
-                        .HasForeignKey("ProgramId");
-
                     b.HasOne("AdmissionInfoSystem.Models.University", "University")
                         .WithMany("Majors")
                         .HasForeignKey("UniversityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Program");
 
                     b.Navigation("University");
                 });
@@ -508,11 +500,6 @@ namespace AdmissionInfoSystem.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("University");
-                });
-
-            modelBuilder.Entity("AdmissionInfoSystem.Models.AcademicProgram", b =>
-                {
-                    b.Navigation("Majors");
                 });
 
             modelBuilder.Entity("AdmissionInfoSystem.Models.AdmissionMethod", b =>

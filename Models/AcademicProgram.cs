@@ -26,8 +26,10 @@ namespace AdmissionInfoSystem.Models
         [Required]
         public int UniversityId { get; set; }
         
-        // Navigation property
+        // Navigation properties
         [ForeignKey("UniversityId")]
         public virtual University University { get; set; } = null!;
+        
+        public virtual ICollection<Major> Majors { get; set; } = new List<Major>();
     }
 } 

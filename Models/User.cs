@@ -9,19 +9,38 @@ namespace AdmissionInfoSystem.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         
-        [Required]
-        public string Username { get; set; } = string.Empty;
-        
-        public string? Email { get; set; }
+        [StringLength(50)]
+        public string? Username { get; set; }
         
         [Required]
-        public string Password { get; set; } = string.Empty;
+        [EmailAddress]
+        [StringLength(100)]
+        public string Email { get; set; } = string.Empty;
+        
+        [StringLength(100)]
+        public string? DisplayName { get; set; }
+        
+        [StringLength(500)]
+        public string? PhotoURL { get; set; }
+        
+        [StringLength(100)]
+        public string? PasswordHash { get; set; }
+        
+        [StringLength(50)]
+        public string? FirebaseUid { get; set; }
         
         [Required]
-        public string UserType { get; set; } = string.Empty;
+        [StringLength(20)]
+        public string Role { get; set; } = "student"; // student, university, admin
         
-        [Required]
+        [StringLength(20)]
+        public string Provider { get; set; } = "email"; // email, google
+        
+        public bool EmailVerified { get; set; } = false;
+        
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        public DateTime? LastLoginAt { get; set; }
         
         // Foreign key
         public int? UniversityId { get; set; }

@@ -26,8 +26,13 @@ namespace AdmissionInfoSystem.Models
         [Required]
         public int UniversityId { get; set; }
         
-        // Navigation property
+        public int? ProgramId { get; set; }
+        
+        // Navigation properties
         [ForeignKey("UniversityId")]
         public virtual University University { get; set; } = null!;
+        
+        [ForeignKey("ProgramId")]
+        public virtual AcademicProgram? Program { get; set; }
     }
 } 

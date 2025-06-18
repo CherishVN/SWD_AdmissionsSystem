@@ -27,9 +27,9 @@ namespace AdmissionInfoSystem.Controllers
             }
 
             var result = await _userService.RegisterUserAsync(registerDto);
-            if (!result.IsSuccess)
+            if (string.IsNullOrEmpty(result.Token))
             {
-                return BadRequest(result);
+                return BadRequest(new { message = "Đăng ký thất bại" });
             }
 
             return Ok(result);
@@ -45,9 +45,9 @@ namespace AdmissionInfoSystem.Controllers
             }
 
             var result = await _userService.LoginAsync(loginDto);
-            if (!result.IsSuccess)
+            if (string.IsNullOrEmpty(result.Token))
             {
-                return BadRequest(result);
+                return BadRequest(new { message = "Đăng nhập thất bại" });
             }
 
             return Ok(result);
@@ -64,8 +64,14 @@ namespace AdmissionInfoSystem.Controllers
                 Id = u.Id,
                 Username = u.Username,
                 Email = u.Email,
-                UserType = u.UserType,
-                UniversityId = u.UniversityId
+                DisplayName = u.DisplayName,
+                Role = u.Role,
+                PhotoURL = u.PhotoURL,
+                Provider = u.Provider,
+                UniversityId = u.UniversityId,
+                EmailVerified = u.EmailVerified,
+                CreatedAt = u.CreatedAt,
+                LastLoginAt = u.LastLoginAt
             });
 
             return Ok(userDtos);
@@ -88,8 +94,14 @@ namespace AdmissionInfoSystem.Controllers
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
-                UserType = user.UserType,
-                UniversityId = user.UniversityId
+                DisplayName = user.DisplayName,
+                Role = user.Role,
+                PhotoURL = user.PhotoURL,
+                Provider = user.Provider,
+                UniversityId = user.UniversityId,
+                EmailVerified = user.EmailVerified,
+                CreatedAt = user.CreatedAt,
+                LastLoginAt = user.LastLoginAt
             };
 
             return userDto;
@@ -113,7 +125,9 @@ namespace AdmissionInfoSystem.Controllers
 
             user.Username = userDto.Username;
             user.Email = userDto.Email;
-            user.UserType = userDto.UserType;
+            user.DisplayName = userDto.DisplayName;
+            user.Role = userDto.Role;
+            user.PhotoURL = userDto.PhotoURL;
             user.UniversityId = userDto.UniversityId;
 
             await _userService.UpdateUserAsync(user);

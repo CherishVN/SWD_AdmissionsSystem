@@ -14,40 +14,40 @@ namespace AdmissionInfoSystem.Repositories
             _db = db;
         }
 
-        public async Task<User> GetUserByUsernameAsync(string username)
+        public async Task<User?> GetUserByUsernameAsync(string username)
         {
             return await _db.Users
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
-        public async Task<User> GetUserByEmailAsync(string email)
+        public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _db.Users
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public async Task<User> AuthenticateAsync(string username, string password)
+        public async Task<User?> AuthenticateAsync(string usernameOrEmail, string password)
         {
             var user = await _db.Users
-                .FirstOrDefaultAsync(u => u.Username == username);
+                .FirstOrDefaultAsync(u => u.Username == usernameOrEmail || u.Email == usernameOrEmail);
 
-            if (user == null)
+            if (user == null || user.PasswordHash == null)
                 return null;
 
             try
             {
                 // Sử dụng BCrypt để kiểm tra mật khẩu
-                bool verified = BCrypt.Net.BCrypt.Verify(password, user.Password);
+                bool verified = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
                 if (verified)
                     return user;
             }
             catch (SaltParseException)
             {
                 // Nếu mật khẩu không phải định dạng BCrypt (từ dữ liệu cũ), so sánh trực tiếp
-                if (user.Password == password)
+                if (user.PasswordHash == password)
                 {
                     // Cập nhật mật khẩu sang định dạng BCrypt cho lần đăng nhập sau
-                    user.Password = BCrypt.Net.BCrypt.HashPassword(password);
+                    user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
                     await _db.SaveChangesAsync();
                     return user;
                 }
