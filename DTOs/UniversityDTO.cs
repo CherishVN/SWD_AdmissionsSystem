@@ -13,6 +13,7 @@ namespace AdmissionInfoSystem.DTOs
         public int? Ranking { get; set; }
         public string RankingCriteria { get; set; } = string.Empty;
         public string? Locations { get; set; }
+        public string? Logo { get; set; }
         
         [Required]
         [MaxLength(20)]
@@ -47,6 +48,10 @@ namespace AdmissionInfoSystem.DTOs
         public string RankingCriteria { get; set; } = string.Empty;
         
         public string? Locations { get; set; }
+        
+        [Url(ErrorMessage = "Logo phải là URL hợp lệ")]
+        [MaxLength(500, ErrorMessage = "URL Logo không được quá 500 ký tự")]
+        public string? Logo { get; set; }
         
         [Required(ErrorMessage = "Loại trường là bắt buộc")]
         [RegularExpression("^(Công lập|Tư thục)$", ErrorMessage = "Loại trường phải là 'Công lập' hoặc 'Tư thục'")]
@@ -84,6 +89,10 @@ namespace AdmissionInfoSystem.DTOs
         public string RankingCriteria { get; set; } = string.Empty;
         
         public string? Locations { get; set; }
+        
+        [Url(ErrorMessage = "Logo phải là URL hợp lệ")]
+        [MaxLength(500, ErrorMessage = "URL Logo không được quá 500 ký tự")]
+        public string? Logo { get; set; }
         
         [Required(ErrorMessage = "Loại trường là bắt buộc")]
         [RegularExpression("^(Công lập|Tư thục)$", ErrorMessage = "Loại trường phải là 'Công lập' hoặc 'Tư thục'")]

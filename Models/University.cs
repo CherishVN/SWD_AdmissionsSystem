@@ -32,6 +32,10 @@ namespace AdmissionInfoSystem.Models
         // Thêm thuộc tính Locations để lưu trữ các thẻ vị trí
         public string? Locations { get; set; }
         
+        // Thêm thuộc tính Logo để lưu URL logo của trường
+        [MaxLength(500)]
+        public string? Logo { get; set; }
+        
         [Required]
         [MaxLength(20)]
         public string Type { get; set; } = "Công lập";

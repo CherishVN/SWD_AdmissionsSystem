@@ -32,6 +32,7 @@ namespace AdmissionInfoSystem.Controllers
                 Ranking = u.Ranking,
                 RankingCriteria = u.RankingCriteria,
                 Locations = u.Locations,
+                Logo = u.Logo,
                 Type = u.Type
             });
 
@@ -63,6 +64,7 @@ namespace AdmissionInfoSystem.Controllers
                     Ranking = u.Ranking,
                     RankingCriteria = u.RankingCriteria,
                     Locations = u.Locations,
+                    Logo = u.Logo,
                     Type = u.Type
                 });
 
@@ -96,6 +98,7 @@ namespace AdmissionInfoSystem.Controllers
                 Ranking = university.Ranking,
                 RankingCriteria = university.RankingCriteria,
                 Locations = university.Locations,
+                Logo = university.Logo,
                 Type = university.Type
             };
 
@@ -124,6 +127,7 @@ namespace AdmissionInfoSystem.Controllers
                 Ranking = university.Ranking,
                 RankingCriteria = university.RankingCriteria,
                 Locations = university.Locations,
+                Logo = university.Logo,
                 Type = university.Type
             };
 
@@ -151,6 +155,7 @@ namespace AdmissionInfoSystem.Controllers
                     Ranking = createDto.Ranking,
                     RankingCriteria = createDto.RankingCriteria,
                     Locations = createDto.Locations,
+                    Logo = createDto.Logo,
                     Type = createDto.Type
                 };
 
@@ -167,6 +172,7 @@ namespace AdmissionInfoSystem.Controllers
                     Ranking = university.Ranking,
                     RankingCriteria = university.RankingCriteria,
                     Locations = university.Locations,
+                    Logo = university.Logo,
                     Type = university.Type
                 };
 
@@ -208,6 +214,7 @@ namespace AdmissionInfoSystem.Controllers
                 university.Ranking = updateDto.Ranking;
                 university.RankingCriteria = updateDto.RankingCriteria;
                 university.Locations = updateDto.Locations;
+                university.Logo = updateDto.Logo;
                 university.Type = updateDto.Type;
 
                 await _universityService.UpdateUniversityAsync(university);
@@ -217,6 +224,41 @@ namespace AdmissionInfoSystem.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi khi cập nhật trường đại học", error = ex.Message });
+            }
+        }
+
+        // PUT: api/Universities/5/logo - Cập nhật Logo riêng biệt
+        [HttpPut("{id}/logo")]
+        public async Task<IActionResult> UpdateUniversityLogo(int id, UpdateLogoDTO updateLogoDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var university = await _universityService.GetUniversityByIdAsync(id);
+                if (university == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy trường đại học" });
+                }
+
+                // Chỉ cập nhật Logo
+                university.Logo = updateLogoDto.Logo;
+
+                await _universityService.UpdateUniversityAsync(university);
+
+                return Ok(new { 
+                    message = "Cập nhật logo thành công",
+                    logo = university.Logo,
+                    universityId = university.Id,
+                    universityName = university.Name
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi cập nhật logo", error = ex.Message });
             }
         }
 
