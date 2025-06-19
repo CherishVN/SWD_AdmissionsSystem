@@ -71,32 +71,60 @@ namespace AdmissionInfoSystem.Controllers
             return userDto;
         }
 
-        // PUT: api/Users/5
+        // PUT: api/Users/5 - Chỉ cho phép update DisplayName, Role, PhotoURL
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> PutUser(int id, UserDTO userDto)
+        public async Task<IActionResult> PutUser(int id, UpdateUserDTO updateUserDto)
         {
-            if (id != userDto.Id)
-            {
-                return BadRequest();
-            }
-
             var user = await _userService.GetUserByIdAsync(id);
             if (user == null)
             {
                 return NotFound();
             }
 
-            user.Username = userDto.Username;
-            user.Email = userDto.Email;
-            user.DisplayName = userDto.DisplayName;
-            user.Role = userDto.Role;
-            user.PhotoURL = userDto.PhotoURL;
-            user.UniversityId = userDto.UniversityId;
+            // Chỉ update những field được phép
+            if (!string.IsNullOrEmpty(updateUserDto.DisplayName))
+            {
+                user.DisplayName = updateUserDto.DisplayName;
+            }
+
+            if (!string.IsNullOrEmpty(updateUserDto.Role))
+            {
+                user.Role = updateUserDto.Role;
+            }
+
+            if (!string.IsNullOrEmpty(updateUserDto.PhotoURL))
+            {
+                user.PhotoURL = updateUserDto.PhotoURL;
+            }
 
             await _userService.UpdateUserAsync(user);
 
             return NoContent();
+        }
+
+        // PUT: api/Users/5/change-password - Đổi mật khẩu riêng biệt
+        [HttpPut("{id}/change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(int id, ChangePasswordDTO changePasswordDto)
+        {
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Kiểm tra mật khẩu hiện tại
+            if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.PasswordHash))
+            {
+                return BadRequest(new { message = "Mật khẩu hiện tại không đúng" });
+            }
+
+            // Cập nhật mật khẩu mới
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePasswordDto.NewPassword);
+            await _userService.UpdateUserAsync(user);
+
+            return Ok(new { message = "Đổi mật khẩu thành công" });
         }
 
         // DELETE: api/Users/5

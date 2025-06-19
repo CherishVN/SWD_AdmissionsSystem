@@ -39,7 +39,12 @@ namespace AdmissionInfoSystem
                         maxRetryCount: 5,
                         maxRetryDelay: TimeSpan.FromSeconds(30),
                         errorCodesToAdd: null);
-                }));
+                })
+                .EnableSensitiveDataLogging(false)
+                .EnableDetailedErrors(false));
+
+            // Cấu hình PostgreSQL để sử dụng DateTime without timezone
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
             // Add repositories
             builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
