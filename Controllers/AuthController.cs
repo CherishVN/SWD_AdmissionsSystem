@@ -31,7 +31,6 @@ namespace AdmissionInfoSystem.Controllers
         {
             try
             {
-                // Find user by email or username
                 var user = await _context.Users
                     .Include(u => u.University)
                     .FirstOrDefaultAsync(u => 
@@ -44,11 +43,18 @@ namespace AdmissionInfoSystem.Controllers
                     return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác" });
                 }
 
-                // Update last login
+                if (!user.EmailVerified)
+                {
+                    return BadRequest(new { 
+                        message = "Email chưa được xác minh", 
+                        code = "EMAIL_NOT_VERIFIED",
+                        email = user.Email 
+                    });
+                }
+
                 user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                // Generate token
                 var token = _jwtService.GenerateToken(user);
 
                 var response = new AuthResponseDTO
@@ -157,6 +163,12 @@ namespace AdmissionInfoSystem.Controllers
         {
             try
             {
+                // Validate that either Password or FirebaseUid is provided
+                if (string.IsNullOrEmpty(request.Password) && string.IsNullOrEmpty(request.FirebaseUid))
+                {
+                    return BadRequest(new { message = "Mật khẩu hoặc Firebase UID là bắt buộc" });
+                }
+
                 // Check if email already exists
                 if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 {
@@ -170,8 +182,18 @@ namespace AdmissionInfoSystem.Controllers
                     return BadRequest(new { message = "Tên đăng nhập đã được sử dụng" });
                 }
 
-                // Hash password
-                var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                // Hash password (only if provided - for Firebase users, password might be null)
+                string? passwordHash = null;
+                string provider = "email";
+                
+                if (!string.IsNullOrEmpty(request.Password))
+                {
+                    passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                }
+                else if (!string.IsNullOrEmpty(request.FirebaseUid))
+                {
+                    provider = "firebase";
+                }
 
                 // Create user
                 var user = new User
@@ -181,7 +203,9 @@ namespace AdmissionInfoSystem.Controllers
                     DisplayName = request.DisplayName,
                     PasswordHash = passwordHash,
                     Role = request.Role,
-                    Provider = "email",
+                    Provider = provider,
+                    FirebaseUid = request.FirebaseUid,
+                    EmailVerified = request.EmailVerified,
                     UniversityId = request.UniversityId,
                     CreatedAt = DateTime.UtcNow,
                     LastLoginAt = DateTime.UtcNow
@@ -218,6 +242,26 @@ namespace AdmissionInfoSystem.Controllers
             {
                 _logger.LogError(ex, "Register error for email: {Email}", request.Email);
                 return StatusCode(500, new { message = "Đăng ký thất bại" });
+            }
+        }
+
+        [HttpPost("check-availability")]
+        public async Task<IActionResult> CheckAvailability([FromBody] CheckAvailabilityDTO request)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(request.Username) && 
+                    await _context.Users.AnyAsync(u => u.Username == request.Username))
+                {
+                    return BadRequest(new { message = "Tên đăng nhập đã được sử dụng" });
+                }
+
+                return Ok(new { message = "Available" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Check availability error");
+                return StatusCode(500, new { message = "Lỗi server" });
             }
         }
 

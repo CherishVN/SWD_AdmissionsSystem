@@ -146,6 +146,9 @@ namespace AdmissionInfoSystem
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // Add default route to redirect to Swagger
+            app.MapGet("/", () => Results.Redirect("/swagger"));
+
             app.MapControllers();
 
             app.Run();
