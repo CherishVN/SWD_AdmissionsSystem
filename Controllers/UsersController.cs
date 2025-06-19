@@ -17,42 +17,6 @@ namespace AdmissionInfoSystem.Controllers
             _userService = userService;
         }
 
-        // POST: api/Users/register
-        [HttpPost("register")]
-        public async Task<ActionResult<AuthResponseDTO>> Register([FromBody] RegisterDTO registerDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var result = await _userService.RegisterUserAsync(registerDto);
-            if (string.IsNullOrEmpty(result.Token))
-            {
-                return BadRequest(new { message = "Đăng ký thất bại" });
-            }
-
-            return Ok(result);
-        }
-
-        // POST: api/Users/login
-        [HttpPost("login")]
-        public async Task<ActionResult<AuthResponseDTO>> Login([FromBody] LoginDTO loginDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var result = await _userService.LoginAsync(loginDto);
-            if (string.IsNullOrEmpty(result.Token))
-            {
-                return BadRequest(new { message = "Đăng nhập thất bại" });
-            }
-
-            return Ok(result);
-        }
-
         // GET: api/Users
         [HttpGet]
         [Authorize]

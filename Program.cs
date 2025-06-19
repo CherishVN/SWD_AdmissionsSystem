@@ -19,11 +19,17 @@ namespace AdmissionInfoSystem
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Cấu hình để lắng nghe trên tất cả interfaces và port từ biến môi trường (cho Railway)
+            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+            builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
             // Add services to the container.
             builder.Services.AddControllers();
 
-            // Configure PostgreSQL connection (Supabase)
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
+            // Configure PostgreSQL connection (Supabase - với hỗ trợ biến môi trường cho Railway)
+            var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ?? 
+                Environment.GetEnvironmentVariable("SUPABASE_CONNECTION_STRING") ??
+                builder.Configuration.GetConnectionString("DefaultConnection") ??
                 "User Id=postgres.rgjnylthyxydbcghbllq;Password=IloveYou3000!123;Server=aws-0-ap-southeast-1.pooler.supabase.com;Port=5432;Database=postgres";
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -60,10 +66,16 @@ namespace AdmissionInfoSystem
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
 
-            // Cấu hình JWT Authentication
-            var jwtKey = builder.Configuration["Jwt:Key"] ?? "ThisIsADefaultSecretKeyForJWTAuthentication12345";
-            var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AdmissionInfoSystem";
-            var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "AdmissionInfoSystemClient";
+            // Cấu hình JWT Authentication (với hỗ trợ biến môi trường cho Railway)
+            var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? 
+                builder.Configuration["Jwt:Key"] ?? 
+                "ThisIsADefaultSecretKeyForJWTAuthentication12345";
+            var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? 
+                builder.Configuration["Jwt:Issuer"] ?? 
+                "AdmissionInfoSystem";
+            var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? 
+                builder.Configuration["Jwt:Audience"] ?? 
+                "AdmissionInfoSystemClient";
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -127,15 +139,14 @@ namespace AdmissionInfoSystem
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            // Luôn enable Swagger để có thể test API trên Railway
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Admission Info System API V1");
-                    c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
-                });
-            }
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Admission Info System API V1");
+                c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
+                c.RoutePrefix = "swagger"; // Đặt Swagger tại /swagger
+            });
 
             //app.UseHttpsRedirection();
 
@@ -147,7 +158,7 @@ namespace AdmissionInfoSystem
             app.UseAuthorization();
 
             app.MapControllers();
-
+            app.MapGet("/", () => Results.Redirect("/swagger"));
             app.Run();
         }
     }
