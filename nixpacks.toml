@@ -1,0 +1,11 @@
+[providers.dotnet]
+version = "8.0"
+
+[build]
+cmd = "dotnet publish --configuration Release --output out"
+
+[start]
+cmd = "dotnet out/AdmissionInfoSystem.dll"
+
+[variables]
+ASPNETCORE_URLS = "http://0.0.0.0:8080" 

@@ -1,0 +1,13 @@
+bin/
+obj/
+.git/
+.gitignore
+.vs/
+.vscode/
+*.swp
+*.tmp
+Thumbs.db
+.DS_Store
+node_modules/
+npm-debug.log
+*.log 
