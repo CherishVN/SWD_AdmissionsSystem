@@ -1,5 +1,6 @@
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Services;
+using AdmissionInfoSystem.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdmissionInfoSystem.Controllers
@@ -47,6 +48,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // POST: api/Scholarships
         [HttpPost]
+        [AdminAuthorize]
         public async Task<ActionResult<Scholarship>> PostScholarship(Scholarship scholarship)
         {
             var createdScholarship = await _scholarshipService.CreateAsync(scholarship);
@@ -55,6 +57,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // PUT: api/Scholarships/5
         [HttpPut("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> PutScholarship(int id, Scholarship scholarship)
         {
             if (id != scholarship.Id)
@@ -68,6 +71,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // DELETE: api/Scholarships/5
         [HttpDelete("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> DeleteScholarship(int id)
         {
             await _scholarshipService.DeleteAsync(id);

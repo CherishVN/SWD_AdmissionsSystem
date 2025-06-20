@@ -1,6 +1,7 @@
 using AdmissionInfoSystem.DTOs;
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Services;
+using AdmissionInfoSystem.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,7 +20,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // GET: api/Users
         [HttpGet]
-        [Authorize]
+        [AdminAuthorize]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetUsers()
         {
             var users = await _userService.GetAllUsersAsync();
@@ -43,7 +44,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        [Authorize]
+        [AdminAuthorize]
         public async Task<ActionResult<UserDTO>> GetUser(int id)
         {
             var user = await _userService.GetUserByIdAsync(id);
@@ -129,7 +130,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
-        [Authorize]
+        [AdminAuthorize]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _userService.GetUserByIdAsync(id);

@@ -1,5 +1,6 @@
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Services;
+using AdmissionInfoSystem.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdmissionInfoSystem.Controllers
@@ -47,6 +48,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // POST: api/Majors
         [HttpPost]
+        [AdminAuthorize]
         public async Task<ActionResult<Major>> PostMajor(Major major)
         {
             var createdMajor = await _majorService.CreateAsync(major);
@@ -55,6 +57,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // PUT: api/Majors/5
         [HttpPut("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> PutMajor(int id, Major major)
         {
             if (id != major.Id)
@@ -68,6 +71,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // DELETE: api/Majors/5
         [HttpDelete("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> DeleteMajor(int id)
         {
             await _majorService.DeleteAsync(id);

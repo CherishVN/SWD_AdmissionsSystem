@@ -1,6 +1,7 @@
 using AdmissionInfoSystem.DTOs;
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Services;
+using AdmissionInfoSystem.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdmissionInfoSystem.Controllers
@@ -109,6 +110,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // POST: api/Universities
         [HttpPost]
+        [AdminAuthorize]
         public async Task<ActionResult<UniversityDTO>> PostUniversity(CreateUniversityDTO createDto)
         {
             try
@@ -159,6 +161,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // PUT: api/Universities/5
         [HttpPut("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> PutUniversity(int id, UpdateUniversityDTO updateDto)
         {
             try
@@ -202,6 +205,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // PUT: api/Universities/5/logo - Cập nhật Logo riêng biệt
         [HttpPut("{id}/logo")]
+        [AdminAuthorize]
         public async Task<IActionResult> UpdateUniversityLogo(int id, UpdateLogoDTO updateLogoDto)
         {
             try
@@ -237,6 +241,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // DELETE: api/Universities/5
         [HttpDelete("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> DeleteUniversity(int id)
         {
             var university = await _universityService.GetUniversityByIdAsync(id);

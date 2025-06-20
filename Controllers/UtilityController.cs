@@ -3,12 +3,14 @@ using BCrypt.Net;
 using AdmissionInfoSystem.Services;
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Data;
+using AdmissionInfoSystem.Attributes;
 using Microsoft.EntityFrameworkCore;
 
 namespace AdmissionInfoSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [AdminAuthorize]
     public class UtilityController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

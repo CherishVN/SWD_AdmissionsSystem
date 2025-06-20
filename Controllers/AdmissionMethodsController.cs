@@ -1,5 +1,6 @@
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Services;
+using AdmissionInfoSystem.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdmissionInfoSystem.Controllers
@@ -47,6 +48,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // POST: api/AdmissionMethods
         [HttpPost]
+        [AdminAuthorize]
         public async Task<ActionResult<AdmissionMethod>> PostAdmissionMethod(AdmissionMethod method)
         {
             var createdMethod = await _methodService.CreateAsync(method);
@@ -55,6 +57,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // PUT: api/AdmissionMethods/5
         [HttpPut("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> PutAdmissionMethod(int id, AdmissionMethod method)
         {
             if (id != method.Id)
@@ -68,6 +71,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // DELETE: api/AdmissionMethods/5
         [HttpDelete("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> DeleteAdmissionMethod(int id)
         {
             await _methodService.DeleteAsync(id);

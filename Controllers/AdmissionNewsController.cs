@@ -1,6 +1,7 @@
 using AdmissionInfoSystem.DTOs;
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Services;
+using AdmissionInfoSystem.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdmissionInfoSystem.Controllers
@@ -100,6 +101,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // POST: api/AdmissionNews
         [HttpPost]
+        [AdminAuthorize]
         public async Task<ActionResult<AdmissionNewDTO>> PostAdmissionNew(AdmissionNewCreateDTO admissionNewDto)
         {
             var admissionNew = new AdmissionNew
@@ -128,6 +130,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // PUT: api/AdmissionNews/5
         [HttpPut("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> PutAdmissionNew(int id, AdmissionNewUpdateDTO admissionNewDto)
         {
             if (id != admissionNewDto.Id)
@@ -154,6 +157,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // DELETE: api/AdmissionNews/5
         [HttpDelete("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> DeleteAdmissionNew(int id)
         {
             var admissionNew = await _admissionNewService.GetAdmissionNewByIdAsync(id);

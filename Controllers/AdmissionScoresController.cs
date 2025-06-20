@@ -1,6 +1,7 @@
 using AdmissionInfoSystem.DTOs;
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Services.Interface;
+using AdmissionInfoSystem.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdmissionInfoSystem.Controllers
@@ -169,6 +170,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // POST: api/AdmissionScores
         [HttpPost]
+        [AdminAuthorize]
         public async Task<ActionResult<AdmissionScoreDTO>> PostAdmissionScore(CreateAdmissionScoreDTO createDto)
         {
             try
@@ -222,6 +224,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // PUT: api/AdmissionScores/5
         [HttpPut("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> PutAdmissionScore(int id, UpdateAdmissionScoreDTO updateDto)
         {
             try
@@ -281,6 +284,7 @@ namespace AdmissionInfoSystem.Controllers
 
         // DELETE: api/AdmissionScores/5
         [HttpDelete("{id}")]
+        [AdminAuthorize]
         public async Task<IActionResult> DeleteAdmissionScore(int id)
         {
             try
