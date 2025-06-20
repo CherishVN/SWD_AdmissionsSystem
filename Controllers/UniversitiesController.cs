@@ -105,34 +105,7 @@ namespace AdmissionInfoSystem.Controllers
             return universityDto;
         }
 
-        // GET: api/Universities/5/details
-        [HttpGet("{id}/details")]
-        public async Task<ActionResult<UniversityDTO>> GetUniversityDetails(int id)
-        {
-            var university = await _universityService.GetUniversityWithDetailsAsync(id);
-
-            if (university == null)
-            {
-                return NotFound();
-            }
-
-            var universityDto = new UniversityDTO
-            {
-                Id = university.Id,
-                Name = university.Name,
-                ShortName = university.ShortName,
-                Introduction = university.Introduction,
-                OfficialWebsite = university.OfficialWebsite,
-                AdmissionWebsite = university.AdmissionWebsite,
-                Ranking = university.Ranking,
-                RankingCriteria = university.RankingCriteria,
-                Locations = university.Locations,
-                Logo = university.Logo,
-                Type = university.Type
-            };
-
-            return universityDto;
-        }
+        
 
         // POST: api/Universities
         [HttpPost]
