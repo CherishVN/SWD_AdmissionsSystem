@@ -24,7 +24,12 @@ namespace AdmissionInfoSystem
             builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
             // Add services to the container.
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                    options.JsonSerializerOptions.WriteIndented = true;
+                });
 
             // Configure PostgreSQL connection (Supabase - với hỗ trợ biến môi trường cho Railway)
             var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ?? 
