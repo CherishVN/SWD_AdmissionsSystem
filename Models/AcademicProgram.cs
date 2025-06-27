@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace AdmissionInfoSystem.Models
 {
@@ -28,8 +29,10 @@ namespace AdmissionInfoSystem.Models
         
         // Navigation properties
         [ForeignKey("UniversityId")]
+        [JsonIgnore]
         public virtual University University { get; set; } = null!;
         
+        [JsonIgnore]
         public virtual ICollection<Major> Majors { get; set; } = new List<Major>();
     }
 } 
