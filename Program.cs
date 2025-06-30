@@ -62,6 +62,7 @@ namespace AdmissionInfoSystem
             builder.Services.AddScoped<IScholarshipRepository, ScholarshipRepository>();
             builder.Services.AddScoped<IAdmissionScoreRepository, AdmissionScoreRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IChatRepository, ChatRepository>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Add services
@@ -75,6 +76,11 @@ namespace AdmissionInfoSystem
             builder.Services.AddScoped<IAdmissionScoreService, AdmissionScoreService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddScoped<IChatService, ChatService>();
+            builder.Services.AddScoped<IAIService, AIService>();
+            
+            // Add HttpClient for AI service
+            builder.Services.AddHttpClient();
 
             // Cấu hình JWT Authentication (với hỗ trợ biến môi trường cho Railway)
             var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? 
