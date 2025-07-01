@@ -16,8 +16,23 @@ namespace AdmissionInfoSystem.Repositories
         public async Task<IEnumerable<Major>> GetByUniversityIdAsync(int universityId)
         {
             return await _context.Majors
+                .Include(m => m.University)
                 .Where(m => m.UniversityId == universityId)
                 .ToListAsync();
+        }
+
+        public new async Task<IEnumerable<Major>> GetAllAsync()
+        {
+            return await _context.Majors
+                .Include(m => m.University)
+                .ToListAsync();
+        }
+
+        public new async Task<Major?> GetByIdAsync(int id)
+        {
+            return await _context.Majors
+                .Include(m => m.University)
+                .FirstOrDefaultAsync(m => m.Id == id);
         }
     }
 } 
