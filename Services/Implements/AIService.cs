@@ -102,12 +102,7 @@ Lịch sử cuộc trò chuyện:
 Người dùng: {userMessage}
 Trợ lý AI:";
 
-            // Debug: In ra prompt để kiểm tra
-            Console.WriteLine("=== DEBUG PROMPT ===");
-            Console.WriteLine($"Context Data: {contextData}");
-            Console.WriteLine($"User Message: {userMessage}");
-            Console.WriteLine($"Conversation History: {conversationHistory}");
-            Console.WriteLine("===================");
+            
 
             // Gọi AI API (ví dụ: Gemini hoặc OpenAI)
             return await CallGeminiAPI(prompt);
