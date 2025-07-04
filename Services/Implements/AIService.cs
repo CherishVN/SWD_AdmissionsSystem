@@ -51,14 +51,16 @@ namespace AdmissionInfoSystem.Services.Implements
             var systemPrompt = @"Bạn là một trợ lý AI chuyên về tuyển sinh đại học tại Việt Nam. 
 
 QUY TẮC TUYỆT ĐỐI:
-- BẮT BUỘC phải sử dụng dữ liệu được cung cấp trong phần 'Dữ liệu ngữ cảnh' để trả lời
+- Nếu 'Dữ liệu ngữ cảnh' chỉ chứa 'THÔNG TIN TỔNG QUAN VỀ HỆ THỐNG TUYỂN SINH' thì đây là tin nhắn chào hỏi - CHỈ trả lời chung chung về khả năng hỗ trợ
+- Với dữ liệu cụ thể: BẮT BUỘC phải sử dụng dữ liệu được cung cấp trong phần 'Dữ liệu ngữ cảnh' để trả lời
 - NGHIÊM CẤM nói 'không có thông tin', 'xin lỗi', 'tôi không thể' khi có dữ liệu trong ngữ cảnh
 - LUÔN bắt đầu câu trả lời bằng thông tin tích cực: 'Dựa trên dữ liệu...', 'Theo thông tin...', 'Từ dữ liệu...'
 - Nếu có bất kỳ thông tin nào trong dữ liệu ngữ cảnh, hãy sử dụng ngay lập tức
 - Trả lời trực tiếp, không giải thích tại sao có hoặc không có thông tin
 
 CÁCH TRẢ LỜI:
-- Luôn bắt đầu bằng: 'Dựa trên dữ liệu tuyển sinh...' hoặc 'Theo thông tin từ hệ thống...'
+- Với tin nhắn chào hỏi (khi có 'THÔNG TIN TỔNG QUAN'): CHỈ trả lời chung chung về khả năng hỗ trợ tuyển sinh, KHÔNG đề cập tên trường cụ thể
+- Với câu hỏi cụ thể: Luôn bắt đầu bằng 'Dựa trên dữ liệu tuyển sinh...' hoặc 'Theo thông tin từ hệ thống...'
 - Đưa ra thông tin cụ thể ngay lập tức
 - Không bao giờ nói 'xin lỗi' hay 'không có thông tin' khi đã có dữ liệu
 - Nếu không tìm thấy trường cụ thể, hãy trả lời về các trường tương tự có trong dữ liệu
@@ -70,6 +72,11 @@ VÍ DỤ TRẢ LỜI TỐT:
 
 ❌ 'Không có thông tin về...'
 ✅ 'Theo thông tin từ hệ thống, các trường có trong database bao gồm...'
+
+❌ Tin nhắn chào: 'Dựa trên dữ liệu tuyển sinh, chào bạn! Tôi có thể hỗ trợ bạn tìm hiểu thông tin về Học viện Hậu cần, Học viện Ngoại giao và Đại học FPT.'
+✅ Tin nhắn chào: 'Dựa trên dữ liệu tuyển sinh, chào bạn! Tôi có thể hỗ trợ bạn tìm hiểu thông tin về tuyển sinh của các trường đại học, ngành học, điểm chuẩn, học phí và học bổng.'
+
+QUAN TRỌNG: Khi thấy 'THÔNG TIN TỔNG QUAN VỀ HỆ THỐNG TUYỂN SINH' trong ngữ cảnh, TUYỆT ĐỐI KHÔNG được tự tạo ra tên trường cụ thể!
 
 Nhiệm vụ:
 1. Trả lời câu hỏi về số lượng ngành, tên ngành, điểm chuẩn, học phí
@@ -95,6 +102,13 @@ Lịch sử cuộc trò chuyện:
 Người dùng: {userMessage}
 Trợ lý AI:";
 
+            // Debug: In ra prompt để kiểm tra
+            Console.WriteLine("=== DEBUG PROMPT ===");
+            Console.WriteLine($"Context Data: {contextData}");
+            Console.WriteLine($"User Message: {userMessage}");
+            Console.WriteLine($"Conversation History: {conversationHistory}");
+            Console.WriteLine("===================");
+
             // Gọi AI API (ví dụ: Gemini hoặc OpenAI)
             return await CallGeminiAPI(prompt);
         }
@@ -108,6 +122,40 @@ Trợ lý AI:";
 
             try
             {
+                // Xử lý đặc biệt cho tin nhắn chào hỏi và giới thiệu
+                var greetingKeywords = new[] { 
+                    "xin chào", "chào bạn", "hello", "hi", "chào", "xin chào bạn",
+                    "giới thiệu", "bạn là ai", "ai", "gì", "help", "hỗ trợ"
+                };
+                
+                var isGreeting = greetingKeywords.Any(keyword => 
+                    query.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+                    
+                // Kiểm tra nếu là tin nhắn ngắn và có thể là chào hỏi
+                var isShortGreeting = query.Trim().Length <= 20 && 
+                    (query.Contains("chào", StringComparison.OrdinalIgnoreCase) ||
+                     query.Contains("hello", StringComparison.OrdinalIgnoreCase) ||
+                     query.Contains("hi", StringComparison.OrdinalIgnoreCase));
+
+                // Kiểm tra tin nhắn tự động của hệ thống
+                var isSystemGreeting = query.Contains("Xin chào! Tôi có thể giúp gì cho bạn về tuyển sinh", StringComparison.OrdinalIgnoreCase) ||
+                    query.Contains("tôi có thể giúp gì cho bạn", StringComparison.OrdinalIgnoreCase);
+
+                if (isGreeting || isShortGreeting || isSystemGreeting)
+                {
+                    // Trả về ngữ cảnh chung cho tin nhắn chào hỏi
+                    context.AppendLine("THÔNG TIN TỔNG QUAN VỀ HỆ THỐNG TUYỂN SINH:");
+                    context.AppendLine("📚 Hệ thống cung cấp thông tin tuyển sinh đại học tại Việt Nam");
+                    context.AppendLine("🎓 Hỗ trợ tìm hiểu về các trường đại học, ngành học, điểm chuẩn");
+                    context.AppendLine("💰 Cung cấp thông tin học phí, học bổng, phương thức tuyển sinh");
+                    context.AppendLine("📰 Cập nhật tin tức mới nhất về tuyển sinh");
+                    context.AppendLine("❓ Bạn có thể hỏi về bất kỳ trường đại học hay ngành học nào");
+                    
+                    var greetingResult = context.ToString();
+                    Console.WriteLine($"DEBUG: Greeting detected, returning general context: {greetingResult.Length} characters");
+                    return greetingResult;
+                }
+
                 // Lấy thông tin trường đại học
                 var universities = await _universityRepository.GetAllAsync();
                 Console.WriteLine($"DEBUG: Found {universities?.Count() ?? 0} universities in database");
