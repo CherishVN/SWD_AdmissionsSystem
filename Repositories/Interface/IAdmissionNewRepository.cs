@@ -6,5 +6,6 @@ namespace AdmissionInfoSystem.Repositories
     {
         Task<IEnumerable<AdmissionNew>> GetAdmissionNewsByUniversityAsync(int universityId);
         Task<IEnumerable<AdmissionNew>> GetLatestAdmissionNewsAsync(int count);
+        Task<(IEnumerable<AdmissionNew> items, int totalCount)> GetPagedAdmissionNewsAsync(int page, int pageSize);
     }
 } 

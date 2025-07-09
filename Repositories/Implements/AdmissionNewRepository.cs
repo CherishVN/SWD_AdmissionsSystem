@@ -13,6 +13,21 @@ namespace AdmissionInfoSystem.Repositories
             _db = db;
         }
 
+        public new async Task<IEnumerable<AdmissionNew>> GetAllAsync()
+        {
+            return await _db.AdmissionNews
+                .Include(an => an.University)
+                .OrderByDescending(an => an.PublishDate)
+                .ToListAsync();
+        }
+
+        public new async Task<AdmissionNew> GetByIdAsync(int id)
+        {
+            return await _db.AdmissionNews
+                .Include(an => an.University)
+                .FirstOrDefaultAsync(an => an.Id == id);
+        }
+
         public async Task<IEnumerable<AdmissionNew>> GetAdmissionNewsByUniversityAsync(int universityId)
         {
             return await _db.AdmissionNews
@@ -29,6 +44,22 @@ namespace AdmissionInfoSystem.Repositories
                 .OrderByDescending(an => an.PublishDate)
                 .Take(count)
                 .ToListAsync();
+        }
+
+        public async Task<(IEnumerable<AdmissionNew> items, int totalCount)> GetPagedAdmissionNewsAsync(int page, int pageSize)
+        {
+            var query = _db.AdmissionNews
+                .Include(an => an.University)
+                .OrderByDescending(an => an.PublishDate);
+
+            var totalCount = await query.CountAsync();
+            
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
     }
 } 

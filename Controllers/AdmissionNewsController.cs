@@ -36,6 +36,20 @@ namespace AdmissionInfoSystem.Controllers
             return Ok(admissionNewDtos);
         }
 
+        // GET: api/AdmissionNews/paged?page=1&pageSize=10
+        [HttpGet("paged")]
+        public async Task<ActionResult<PagedAdmissionNewsDTO>> GetPagedAdmissionNews(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
+        {
+            // Validate parameters
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 10; // Giới hạn tối đa 100 items/page
+
+            var pagedResult = await _admissionNewService.GetPagedAdmissionNewsAsync(page, pageSize);
+            return Ok(pagedResult);
+        }
+
         // GET: api/AdmissionNews/5
         [HttpGet("{id}")]
         public async Task<ActionResult<AdmissionNewDTO>> GetAdmissionNew(int id)

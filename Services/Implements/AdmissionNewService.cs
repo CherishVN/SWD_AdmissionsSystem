@@ -1,4 +1,5 @@
 using AdmissionInfoSystem.Models;
+using AdmissionInfoSystem.DTOs;
 using AdmissionInfoSystem.Repositories;
 
 namespace AdmissionInfoSystem.Services
@@ -41,6 +42,53 @@ namespace AdmissionInfoSystem.Services
         public async Task<IEnumerable<AdmissionNew>> GetLatestAdmissionNewsAsync(int count)
         {
             return await _admissionNewRepository.GetLatestAdmissionNewsAsync(count);
+        }
+
+        public async Task<PagedAdmissionNewsDTO> GetPagedAdmissionNewsAsync(int page, int pageSize)
+        {
+            var (items, totalCount) = await _admissionNewRepository.GetPagedAdmissionNewsAsync(page, pageSize);
+            
+            var summaryItems = items.Select(an => new AdmissionNewSummaryDTO
+            {
+                Id = an.Id,
+                Title = an.Title,
+                Summary = GetSummary(an.Content, 200), // Lấy 200 ký tự đầu
+                PublishDate = an.PublishDate,
+                Year = an.Year,
+                UniversityId = an.UniversityId,
+                UniversityName = an.University?.Name ?? string.Empty
+            }).ToList();
+
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            return new PagedAdmissionNewsDTO
+            {
+                Items = summaryItems,
+                TotalItems = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalPages = totalPages,
+                HasNextPage = page < totalPages,
+                HasPreviousPage = page > 1
+            };
+        }
+
+        private string GetSummary(string content, int maxLength)
+        {
+            if (string.IsNullOrEmpty(content))
+                return string.Empty;
+
+            if (content.Length <= maxLength)
+                return content;
+
+            // Cắt tại dấu cách gần nhất để tránh cắt giữa từ
+            var summary = content.Substring(0, maxLength);
+            var lastSpaceIndex = summary.LastIndexOf(' ');
+            
+            if (lastSpaceIndex > 0)
+                summary = summary.Substring(0, lastSpaceIndex);
+
+            return summary + "...";
         }
 
         public async Task<AdmissionNew> UpdateAdmissionNewAsync(AdmissionNew admissionNew)
