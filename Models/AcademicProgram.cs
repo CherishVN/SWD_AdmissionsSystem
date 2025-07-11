@@ -30,7 +30,7 @@ namespace AdmissionInfoSystem.Models
         // Navigation properties
         [ForeignKey("UniversityId")]
         [JsonIgnore]
-        public virtual University University { get; set; } = null!;
+        public virtual University? University { get; set; } 
         
         [JsonIgnore]
         public virtual ICollection<Major> Majors { get; set; } = new List<Major>();

@@ -25,7 +25,7 @@ namespace AdmissionInfoSystem.Models
         
         // Navigation properties
         [ForeignKey("UniversityId")]
-        public virtual University University { get; set; } = null!;
+        public virtual University? University { get; set; } 
         
         public virtual ICollection<AdmissionCriteria> AdmissionCriterias { get; set; } = new List<AdmissionCriteria>();
     }

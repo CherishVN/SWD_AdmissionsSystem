@@ -17,7 +17,7 @@ namespace AdmissionInfoSystem.Attributes
                 return;
             }
 
-            var userRole = user.FindFirst("role")?.Value;
+            var userRole = user.FindFirst(ClaimTypes.Role)?.Value;
             
             if (userRole != "admin")
             {

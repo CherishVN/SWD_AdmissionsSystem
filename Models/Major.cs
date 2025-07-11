@@ -30,7 +30,7 @@ namespace AdmissionInfoSystem.Models
         
         // Navigation properties
         [ForeignKey("UniversityId")]
-        public virtual University University { get; set; } = null!;
+        public virtual University? University { get; set; } 
         
         [ForeignKey("ProgramId")]
         public virtual AcademicProgram? Program { get; set; }

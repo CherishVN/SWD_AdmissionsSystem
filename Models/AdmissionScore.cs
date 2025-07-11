@@ -27,7 +27,7 @@ namespace AdmissionInfoSystem.Models
         
         // Navigation properties
         [ForeignKey("MajorId")]
-        public virtual Major Major { get; set; } = null!;
+        public virtual Major? Major { get; set; }
         
         [ForeignKey("AdmissionMethodId")]
         public virtual AdmissionMethod? AdmissionMethod { get; set; }

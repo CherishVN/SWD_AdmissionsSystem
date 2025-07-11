@@ -31,6 +31,6 @@ namespace AdmissionInfoSystem.Models
         
         // Navigation property
         [ForeignKey("UniversityId")]
-        public virtual University University { get; set; } = null!;
+        public virtual University? University { get; set; } 
     }
 } 

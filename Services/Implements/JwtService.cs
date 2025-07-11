@@ -18,7 +18,7 @@ namespace AdmissionInfoSystem.Services
         public string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "ThisIsADefaultSecretKeyForJWTAuthentication12345");
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "ThisIsADefaultSecretKeyForJWTAuthentication12345");
             
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -26,7 +26,7 @@ namespace AdmissionInfoSystem.Services
                 {
                     new Claim("userId", user.Id.ToString()),
                     new Claim("email", user.Email),
-                    new Claim("role", user.Role),
+                    new Claim(ClaimTypes.Role, user.Role),
                     new Claim("displayName", user.DisplayName ?? ""),
                     new Claim("provider", user.Provider ?? "email")
                 }),
@@ -47,7 +47,7 @@ namespace AdmissionInfoSystem.Services
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "ThisIsADefaultSecretKeyForJWTAuthentication12345");
+                var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "ThisIsADefaultSecretKeyForJWTAuthentication12345");
 
                 tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {

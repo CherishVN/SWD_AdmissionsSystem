@@ -220,7 +220,7 @@ namespace AdmissionInfoSystem.Services
         private string GenerateJwtToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "ThisIsADefaultSecretKeyForJWTAuthentication12345");
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "ThisIsADefaultSecretKeyForJWTAuthentication12345");
             
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -228,7 +228,7 @@ namespace AdmissionInfoSystem.Services
                 {
                     new Claim("userId", user.Id.ToString()),
                     new Claim("email", user.Email),
-                    new Claim("role", user.Role),
+                    new Claim(ClaimTypes.Role, user.Role),
                     new Claim("displayName", user.DisplayName ?? ""),
                     new Claim("provider", user.Provider ?? "email")
                 }),

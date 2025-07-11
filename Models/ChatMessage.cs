@@ -23,6 +23,6 @@ namespace AdmissionInfoSystem.Models
         
         // Navigation property
         [ForeignKey("ChatSessionId")]
-        public virtual ChatSession ChatSession { get; set; } = null!;
+        public virtual ChatSession? ChatSession { get; set; } 
     }
 } 

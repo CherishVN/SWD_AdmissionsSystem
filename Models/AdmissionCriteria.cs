@@ -23,6 +23,6 @@ namespace AdmissionInfoSystem.Models
         
         // Navigation property
         [ForeignKey("AdmissionMethodId")]
-        public virtual AdmissionMethod AdmissionMethod { get; set; } = null!;
+        public virtual AdmissionMethod? AdmissionMethod { get; set; } 
     }
 } 
