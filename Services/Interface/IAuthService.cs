@@ -12,5 +12,6 @@ namespace AdmissionInfoSystem.Services.Interface
         Task<User?> GetUserByEmailOrUsernameAsync(string emailOrUsername);
         Task<User?> GetUserByEmailAsync(string email);
         Task<User?> GetUserByFirebaseUidAsync(string firebaseUid);
+        Task<AuthResponseDTO> VerifyEmailAsync(VerifyEmailDTO verifyEmailDto);
     }
 } 

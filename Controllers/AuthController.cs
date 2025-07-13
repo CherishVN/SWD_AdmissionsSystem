@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using AdmissionInfoSystem.DTOs;
 using AdmissionInfoSystem.Services.Interface;
+using AdmissionInfoSystem.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace AdmissionInfoSystem.Controllers
 {
@@ -85,8 +87,27 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
-        
-
-        
+        [HttpPut("verify-email")]
+        public async Task<ActionResult<AuthResponseDTO>> VerifyEmail([FromBody] VerifyEmailDTO request)
+        {
+            try
+            {
+                var response = await _authService.VerifyEmailAsync(request);
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Verify email error for user: {FirebaseUid}, email: {Email}", request.FirebaseUid, request.Email);
+                return StatusCode(500, new { message = "Lỗi server" });
+            }
+        }
     }
 } 

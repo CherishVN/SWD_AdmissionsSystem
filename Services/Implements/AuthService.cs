@@ -214,6 +214,50 @@ namespace AdmissionInfoSystem.Services.Implements
             return await _unitOfWork.Users.GetUserByFirebaseUidAsync(firebaseUid);
         }
 
+        public async Task<AuthResponseDTO> VerifyEmailAsync(VerifyEmailDTO verifyEmailDto)
+        {
+            try
+            {
+                // Find user by FirebaseUid or Email
+                var user = await _unitOfWork.Users.GetUserByFirebaseUidAsync(verifyEmailDto.FirebaseUid);
+                if (user == null)
+                {
+                    user = await _unitOfWork.Users.GetUserByEmailAsync(verifyEmailDto.Email);
+                }
+
+                if (user == null)
+                {
+                    throw new ArgumentException("Không tìm thấy tài khoản");
+                }
+
+                if (user.EmailVerified)
+                {
+                    throw new InvalidOperationException("Email đã được xác thực trước đó");
+                }
+
+                // Update user email verification status
+                user.EmailVerified = true;
+                user.LastLoginAt = DateTime.UtcNow;
+                await _unitOfWork.Users.UpdateAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Generate token
+                var token = _jwtService.GenerateToken(user);
+
+                return new AuthResponseDTO
+                {
+                    User = MapToUserDTO(user),
+                    Token = token
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Verify email error for user: {FirebaseUid}, email: {Email}", 
+                    verifyEmailDto.FirebaseUid, verifyEmailDto.Email);
+                throw;
+            }
+        }
+
         private UserDTO MapToUserDTO(User user)
         {
             return new UserDTO
