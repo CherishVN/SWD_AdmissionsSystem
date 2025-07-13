@@ -26,6 +26,12 @@ namespace AdmissionInfoSystem.Repositories
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        public async Task<User?> GetUserByFirebaseUidAsync(string firebaseUid)
+        {
+            return await _db.Users
+                .FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid);
+        }
+
         public async Task<User?> AuthenticateAsync(string usernameOrEmail, string password)
         {
             var user = await _db.Users
