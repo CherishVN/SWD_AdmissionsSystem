@@ -115,5 +115,29 @@ namespace AdmissionInfoSystem.Controllers
             
             return Ok(new { message = "Đăng xuất thành công" });
         }
+
+        [HttpPost("check-username")]
+        public async Task<IActionResult> CheckUsernameAvailability([FromBody] CheckAvailabilityDTO request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Username))
+                {
+                    return BadRequest(new { message = "Username không được để trống" });
+                }
+                
+                var isAvailable = await _authService.CheckUsernameAvailabilityAsync(request.Username);
+                
+                return Ok(new { 
+                    available = isAvailable,
+                    message = isAvailable ? "Username có thể sử dụng" : "Username đã được sử dụng"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Check username availability error for: {Username}", request.Username);
+                return StatusCode(500, new { message = "Lỗi server" });
+            }
+        }
     }
 } 
