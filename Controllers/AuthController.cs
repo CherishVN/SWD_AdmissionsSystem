@@ -109,5 +109,11 @@ namespace AdmissionInfoSystem.Controllers
                 return StatusCode(500, new { message = "Lỗi server" });
             }
         }
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            
+            return Ok(new { message = "Đăng xuất thành công" });
+        }
     }
 } 
