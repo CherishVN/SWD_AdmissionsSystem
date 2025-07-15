@@ -57,6 +57,7 @@ QUY TẮC TUYỆT ĐỐI:
 - LUÔN bắt đầu câu trả lời bằng thông tin tích cực: 'Dựa trên dữ liệu...', 'Theo thông tin...', 'Từ dữ liệu...'
 - Nếu có bất kỳ thông tin nào trong dữ liệu ngữ cảnh, hãy sử dụng ngay lập tức
 - Trả lời trực tiếp, không giải thích tại sao có hoặc không có thông tin
+- Với câu hỏi tham chiếu (có từ 'đó', 'các', 'những', 'từng'), hãy sử dụng thông tin từ lịch sử chat để hiểu ngữ cảnh
 
 QUAN TRỌNG - NGÀNH HỌC TƯƠNG ĐƯƠNG:
 - CNTT (Công nghệ thông tin) = Kỹ thuật phần mềm = Khoa học máy tính = Software Engineering
@@ -72,6 +73,7 @@ CÁCH TRẢ LỜI:
 - TUYỆT ĐỐI không nói 'xin lỗi', 'không có thông tin', 'chưa cập nhật' khi đã có dữ liệu
 - Nếu không tìm thấy ngành chính xác, hãy trả lời về các ngành tương tự/cùng lĩnh vực có trong dữ liệu
 - Luôn tận dụng tối đa dữ liệu có sẵn
+- Với câu hỏi tham chiếu, hãy xem lịch sử chat để hiểu người dùng đang hỏi về trường nào
 
 VÍ DỤ TRẢ LỜI TỐT:
 ❌ 'Tôi xin lỗi, dữ liệu không có...', 'hệ thống chưa cập nhật...'
@@ -90,26 +92,57 @@ Nhiệm vụ:
 2. So sánh trường đại học và ngành học  
 3. Tư vấn dựa trên dữ liệu có sẵn
 4. Cung cấp thông tin học bổng, phương thức tuyển sinh
-5. Giải đáp về quy trình tuyển sinh";
+5. Giải đáp về quy trình tuyển sinh
+6. Sử dụng lịch sử chat để hiểu ngữ cảnh câu hỏi tham chiếu";
 
+            // Tạo context từ lịch sử chat để AI hiểu được câu hỏi tham chiếu
             var conversationHistory = new StringBuilder();
             foreach (var msg in chatHistory.TakeLast(10)) // Chỉ lấy 10 tin nhắn gần nhất
             {
                 conversationHistory.AppendLine($"{msg.Sender}: {msg.Message}");
             }
 
+            // Nếu là câu hỏi tham chiếu, thêm context từ lịch sử
+            var isReferenceQuery = userMessage.Contains("đó", StringComparison.OrdinalIgnoreCase) ||
+                userMessage.Contains("từng", StringComparison.OrdinalIgnoreCase) ||
+                userMessage.Contains("những", StringComparison.OrdinalIgnoreCase) ||
+                (userMessage.Contains("các", StringComparison.OrdinalIgnoreCase) && 
+                 !userMessage.Contains("trường", StringComparison.OrdinalIgnoreCase));
+
+            var enhancedContextData = contextData;
+            if (isReferenceQuery && chatHistory.Any())
+            {
+                // Tìm trường đại học được đề cập trong lịch sử chat
+                var recentMessages = chatHistory.TakeLast(5);
+                var mentionedUniversities = new List<string>();
+                
+                foreach (var msg in recentMessages)
+                {
+                    if (msg.Message.Contains("FPT", StringComparison.OrdinalIgnoreCase))
+                        mentionedUniversities.Add("FPT");
+                    if (msg.Message.Contains("Bách Khoa", StringComparison.OrdinalIgnoreCase))
+                        mentionedUniversities.Add("Bách Khoa");
+                    if (msg.Message.Contains("Kinh tế", StringComparison.OrdinalIgnoreCase))
+                        mentionedUniversities.Add("Kinh tế");
+                    // Thêm các trường khác nếu cần
+                }
+
+                if (mentionedUniversities.Any())
+                {
+                    enhancedContextData = $"NGỮ CẢNH TỪ LỊCH SỬ CHAT: Người dùng đang hỏi về {string.Join(", ", mentionedUniversities.Distinct())}\n\n{contextData}";
+                }
+            }
+
             var prompt = $@"{systemPrompt}
 
 Dữ liệu ngữ cảnh:
-{contextData}
+{enhancedContextData}
 
 Lịch sử cuộc trò chuyện:
 {conversationHistory}
 
 Người dùng: {userMessage}
 Trợ lý AI:";
-
-            
 
             // Gọi AI API (ví dụ: Gemini hoặc OpenAI)
             return await CallGeminiAPI(prompt);
@@ -174,7 +207,85 @@ Trợ lý AI:";
                     return greetingResult;
                 }
 
-                // Lấy thông tin trường đại học
+                // Xử lý câu hỏi tham chiếu (VD: "các ngành đó là ?", "điểm chuẩn của từng ngành")
+                var isReferenceQuery = query.Contains("đó", StringComparison.OrdinalIgnoreCase) ||
+                    query.Contains("từng", StringComparison.OrdinalIgnoreCase) ||
+                    query.Contains("những", StringComparison.OrdinalIgnoreCase) ||
+                    (query.Contains("các", StringComparison.OrdinalIgnoreCase) && 
+                     !query.Contains("trường", StringComparison.OrdinalIgnoreCase));
+                
+                // Nếu là câu hỏi tham chiếu, mở rộng tìm kiếm để bao gồm tất cả dữ liệu
+                if (isReferenceQuery)
+                {
+                    Console.WriteLine("DEBUG: Reference query detected, expanding search scope");
+                    
+                    // Lấy tất cả dữ liệu từ database để AI có thể tham chiếu
+                    var allUniversities = await _universityRepository.GetAllAsync();
+                    var allMajors = await _majorRepository.GetAllAsync();
+                    var allScores = await _admissionScoreRepository.GetAllAsync();
+                    
+                    Console.WriteLine($"DEBUG: Loaded all data - Universities: {allUniversities?.Count()}, Majors: {allMajors?.Count()}, Scores: {allScores?.Count()}");
+                    
+                    // Thêm thông tin về tất cả trường đại học
+                    if (allUniversities?.Any() == true)
+                    {
+                        context.AppendLine("THÔNG TIN CÁC TRƯỜNG ĐẠI HỌC:");
+                        foreach (var uni in allUniversities.Take(10)) // Giới hạn 10 trường để tránh quá dài
+                        {
+                            context.AppendLine($"🏫 {uni.Name} ({uni.ShortName})");
+                            if (!string.IsNullOrEmpty(uni.Introduction))
+                                context.AppendLine($"  Giới thiệu: {uni.Introduction.Substring(0, Math.Min(100, uni.Introduction.Length))}...");
+                            context.AppendLine($"  Loại: {uni.Type}");
+                            if (uni.Ranking.HasValue)
+                                context.AppendLine($"  Xếp hạng: {uni.Ranking}");
+                        }
+                        context.AppendLine();
+                    }
+                    
+                    // Thêm thông tin về tất cả ngành học
+                    if (allMajors?.Any() == true)
+                    {
+                        context.AppendLine("THÔNG TIN CÁC NGÀNH HỌC:");
+                        var majorsByUniversity = allMajors.GroupBy(m => m.University?.Name ?? "Không xác định").Take(5);
+                        foreach (var group in majorsByUniversity)
+                        {
+                            context.AppendLine($"🎓 {group.Key}:");
+                            foreach (var major in group.Take(10))
+                            {
+                                context.AppendLine($"  - {major.Name} ({major.Code})");
+                                if (!string.IsNullOrEmpty(major.Description))
+                                    context.AppendLine($"    Mô tả: {major.Description.Substring(0, Math.Min(80, major.Description.Length))}...");
+                                if (major.AdmissionScore.HasValue)
+                                    context.AppendLine($"    Điểm chuẩn: {major.AdmissionScore}");
+                            }
+                        }
+                        context.AppendLine();
+                    }
+                    
+                    // Thêm thông tin điểm chuẩn chi tiết
+                    if (allScores?.Any() == true)
+                    {
+                        context.AppendLine("THÔNG TIN ĐIỂM CHUẨN CHI TIẾT:");
+                        var scoresByUniversity = allScores.GroupBy(s => s.Major?.University?.Name ?? "Không xác định").Take(5);
+                        foreach (var group in scoresByUniversity)
+                        {
+                            context.AppendLine($"📊 {group.Key}:");
+                            foreach (var score in group.Take(10))
+                            {
+                                context.AppendLine($"  - {score.Major?.Name}: {score.Score} điểm ({score.Year})");
+                                if (score.AdmissionMethod != null)
+                                    context.AppendLine($"    Phương thức: {score.AdmissionMethod.Name}");
+                            }
+                        }
+                        context.AppendLine();
+                    }
+                    
+                    var referenceResult = context.ToString();
+                    Console.WriteLine($"DEBUG: Reference query result length: {referenceResult.Length} characters");
+                    return referenceResult;
+                }
+
+                // Tiếp tục với logic tìm kiếm thông thường...
                 var universities = await _universityRepository.GetAllAsync();
                 Console.WriteLine($"DEBUG: Found {universities?.Count() ?? 0} universities in database");
                 var relevantUniversities = universities.Where(u => 
