@@ -28,4 +28,9 @@ namespace AdmissionInfoSystem.DTOs
         public string BotResponse { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
     }
+
+    public class UpdateSessionTitleDTO
+    {
+        public string Title { get; set; } = string.Empty;
+    }
 } 

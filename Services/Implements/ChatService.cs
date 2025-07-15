@@ -138,5 +138,16 @@ namespace AdmissionInfoSystem.Services.Implements
             
             return title;
         }
+
+        public async Task<bool> UpdateSessionTitleAsync(int sessionId, int userId, string title)
+        {
+            // Kiểm tra quyền truy cập
+            var session = await _chatRepository.GetSessionByIdAsync(sessionId);
+            if (session == null || session.UserId != userId)
+                return false;
+
+            // Cập nhật title
+            return await _chatRepository.UpdateSessionTitleAsync(sessionId, title);
+        }
     }
 } 

@@ -134,6 +134,33 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
+        /// <summary>
+        /// Cập nhật tiêu đề phiên chat
+        /// </summary>
+        [HttpPut("session/{sessionId}/title")]
+        public async Task<ActionResult> UpdateSessionTitle(int sessionId, [FromBody] UpdateSessionTitleDTO request)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var session = await _chatService.GetChatSessionAsync(sessionId, userId);
+                
+                if (session == null)
+                    return NotFound(new { message = "Không tìm thấy phiên chat hoặc bạn không có quyền truy cập" });
+
+                var success = await _chatService.UpdateSessionTitleAsync(sessionId, userId, request.Title);
+                
+                if (!success)
+                    return BadRequest(new { message = "Không thể cập nhật tiêu đề phiên chat" });
+
+                return Ok(new { message = "Đã cập nhật tiêu đề phiên chat thành công" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Có lỗi xảy ra khi cập nhật tiêu đề phiên chat", error = ex.Message });
+            }
+        }
+
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst("userId")?.Value;

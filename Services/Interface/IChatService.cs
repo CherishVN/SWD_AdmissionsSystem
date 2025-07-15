@@ -9,5 +9,6 @@ namespace AdmissionInfoSystem.Services.Interface
         Task<ChatSessionDTO?> GetChatSessionAsync(int sessionId, int userId);
         Task<bool> DeleteChatSessionAsync(int sessionId, int userId);
         Task<string> GenerateAIResponseAsync(string userMessage, List<ChatMessageDTO> chatHistory);
+        Task<bool> UpdateSessionTitleAsync(int sessionId, int userId, string title);
     }
 } 
