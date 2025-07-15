@@ -52,6 +52,7 @@ namespace AdmissionInfoSystem.Repositories.Implements
             {
                 "User" => "User",
                 "Assistant" => "AI",
+                "AI" => "AI",
                 _ => "User" // Default fallback
             };
 
