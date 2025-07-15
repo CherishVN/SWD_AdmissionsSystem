@@ -72,18 +72,65 @@ namespace AdmissionInfoSystem.Controllers
             return userDto;
         }
 
-        // PUT: api/Users/5 - Chỉ cho phép update DisplayName, Role, PhotoURL
+        // PUT: api/Users/5 - User thường chỉnh sửa thông tin cá nhân
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> PutUser(int id, UpdateUserDTO updateUserDto)
+        public async Task<IActionResult> PutUser(int id, UpdateUserProfileDTO updateUserDto)
         {
             var user = await _userService.GetUserByIdAsync(id);
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Không tìm thấy user" });
             }
 
-            // Chỉ update những field được phép
+            // Lấy thông tin user hiện tại từ JWT token
+            var currentUserIdClaim = HttpContext.User.FindFirst("userId")?.Value;
+            
+            if (string.IsNullOrEmpty(currentUserIdClaim) || !int.TryParse(currentUserIdClaim, out int currentUserId))
+            {
+                return Unauthorized(new { message = "Token không hợp lệ" });
+            }
+
+            // User chỉ có thể chỉnh sửa thông tin của chính mình
+            if (currentUserId != id)
+            {
+                return Forbid("Bạn chỉ có thể chỉnh sửa thông tin của chính mình");
+            }
+
+            // User thường chỉ được chỉnh sửa DisplayName và PhotoURL
+            if (!string.IsNullOrEmpty(updateUserDto.DisplayName))
+            {
+                user.DisplayName = updateUserDto.DisplayName;
+            }
+
+            if (!string.IsNullOrEmpty(updateUserDto.PhotoURL))
+            {
+                user.PhotoURL = updateUserDto.PhotoURL;
+            }
+
+            try
+            {
+                await _userService.UpdateUserAsync(user);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi cập nhật thông tin user", error = ex.Message });
+            }
+        }
+
+        // PUT: api/Users/5/admin - Admin chỉnh sửa tất cả thông tin user
+        [HttpPut("{id}/admin")]
+        [AdminAuthorize]
+        public async Task<IActionResult> PutUserByAdmin(int id, UpdateUserDTO updateUserDto)
+        {
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound(new { message = "Không tìm thấy user" });
+            }
+
+            // Admin có thể chỉnh sửa tất cả các field
             if (!string.IsNullOrEmpty(updateUserDto.DisplayName))
             {
                 user.DisplayName = updateUserDto.DisplayName;
@@ -99,9 +146,20 @@ namespace AdmissionInfoSystem.Controllers
                 user.PhotoURL = updateUserDto.PhotoURL;
             }
 
-            await _userService.UpdateUserAsync(user);
+            if (updateUserDto.EmailVerified.HasValue)
+            {
+                user.EmailVerified = updateUserDto.EmailVerified.Value;
+            }
 
-            return NoContent();
+            try
+            {
+                await _userService.UpdateUserAsync(user);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi cập nhật user", error = ex.Message });
+            }
         }
 
         // PUT: api/Users/5/change-password - Đổi mật khẩu riêng biệt
