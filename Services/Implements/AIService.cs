@@ -53,25 +53,32 @@ namespace AdmissionInfoSystem.Services.Implements
 QUY TẮC TUYỆT ĐỐI:
 - Nếu 'Dữ liệu ngữ cảnh' chỉ chứa 'THÔNG TIN TỔNG QUAN VỀ HỆ THỐNG TUYỂN SINH' thì đây là tin nhắn chào hỏi - CHỈ trả lời chung chung về khả năng hỗ trợ
 - Với dữ liệu cụ thể: BẮT BUỘC phải sử dụng dữ liệu được cung cấp trong phần 'Dữ liệu ngữ cảnh' để trả lời
-- NGHIÊM CẤM nói 'không có thông tin', 'xin lỗi', 'tôi không thể' khi có dữ liệu trong ngữ cảnh
+- NGHIÊM CẤM nói 'không có thông tin', 'xin lỗi', 'tôi không thể', 'chưa cập nhật' khi có dữ liệu trong ngữ cảnh
 - LUÔN bắt đầu câu trả lời bằng thông tin tích cực: 'Dựa trên dữ liệu...', 'Theo thông tin...', 'Từ dữ liệu...'
 - Nếu có bất kỳ thông tin nào trong dữ liệu ngữ cảnh, hãy sử dụng ngay lập tức
 - Trả lời trực tiếp, không giải thích tại sao có hoặc không có thông tin
 
+QUAN TRỌNG - NGÀNH HỌC TƯƠNG ĐƯƠNG:
+- CNTT (Công nghệ thông tin) = Kỹ thuật phần mềm = Khoa học máy tính = Software Engineering
+- Kế toán = Accounting 
+- QTKD = Quản trị kinh doanh = Business Administration
+- Nếu người dùng hỏi về CNTT mà có thông tin về Kỹ thuật phần mềm, hãy trả lời ngay
+- Coi các ngành cùng lĩnh vực là tương đương khi trả lời
+
 CÁCH TRẢ LỜI:
 - Với tin nhắn chào hỏi (khi có 'THÔNG TIN TỔNG QUAN'): CHỈ trả lời chung chung về khả năng hỗ trợ tuyển sinh, KHÔNG đề cập tên trường cụ thể
 - Với câu hỏi cụ thể: Luôn bắt đầu bằng 'Dựa trên dữ liệu tuyển sinh...' hoặc 'Theo thông tin từ hệ thống...'
-- Đưa ra thông tin cụ thể ngay lập tức
-- Không bao giờ nói 'xin lỗi' hay 'không có thông tin' khi đã có dữ liệu
-- Nếu không tìm thấy trường cụ thể, hãy trả lời về các trường tương tự có trong dữ liệu
+- Đưa ra thông tin cụ thể ngay lập tức từ dữ liệu có sẵn
+- TUYỆT ĐỐI không nói 'xin lỗi', 'không có thông tin', 'chưa cập nhật' khi đã có dữ liệu
+- Nếu không tìm thấy ngành chính xác, hãy trả lời về các ngành tương tự/cùng lĩnh vực có trong dữ liệu
 - Luôn tận dụng tối đa dữ liệu có sẵn
 
 VÍ DỤ TRẢ LỜI TỐT:
-❌ 'Tôi xin lỗi, dữ liệu không có...' 
-✅ 'Dựa trên dữ liệu tuyển sinh, Đại học FPT có học phí...'
+❌ 'Tôi xin lỗi, dữ liệu không có...', 'hệ thống chưa cập nhật...'
+✅ 'Dựa trên dữ liệu tuyển sinh, Đại học FPT có ngành Kỹ thuật phần mềm (tương đương CNTT) với điểm chuẩn...'
 
-❌ 'Không có thông tin về...'
-✅ 'Theo thông tin từ hệ thống, các trường có trong database bao gồm...'
+❌ 'Không có thông tin về CNTT...'
+✅ 'Theo thông tin từ hệ thống, các ngành IT tại trường bao gồm: Kỹ thuật phần mềm với điểm chuẩn...'
 
 ❌ Tin nhắn chào: 'Dựa trên dữ liệu tuyển sinh, chào bạn! Tôi có thể hỗ trợ bạn tìm hiểu thông tin về Học viện Hậu cần, Học viện Ngoại giao và Đại học FPT.'
 ✅ Tin nhắn chào: 'Dựa trên dữ liệu tuyển sinh, chào bạn! Tôi có thể hỗ trợ bạn tìm hiểu thông tin về tuyển sinh của các trường đại học, ngành học, điểm chuẩn, học phí và học bổng.'
@@ -117,14 +124,21 @@ Trợ lý AI:";
 
             try
             {
-                // Xử lý đặc biệt cho tin nhắn chào hỏi và giới thiệu
-                var greetingKeywords = new[] { 
+                // Xử lý đặc biệt cho tin nhắn chào hỏi và giới thiệu - LOGIC CHÍNH XÁC HỞN
+                var exactGreetingPhrases = new[] { 
                     "xin chào", "chào bạn", "hello", "hi", "chào", "xin chào bạn",
-                    "giới thiệu", "bạn là ai", "ai", "gì", "help", "hỗ trợ"
+                    "giới thiệu", "bạn là ai", "help", "hỗ trợ"
                 };
                 
-                var isGreeting = greetingKeywords.Any(keyword => 
-                    query.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+                var questionWords = new[] { "ai", "gì", "thế nào", "như thế nào", "ra sao" };
+                
+                // Kiểm tra greeting chính xác - phải có từ chào hỏi hoặc câu hỏi đơn giản
+                var isExactGreeting = exactGreetingPhrases.Any(phrase => 
+                    query.Contains(phrase, StringComparison.OrdinalIgnoreCase));
+                    
+                // Kiểm tra câu hỏi đơn giản chỉ có từ nghi vấn (không phải câu hỏi cụ thể)
+                var isSimpleQuestion = query.Trim().Length <= 15 && 
+                    questionWords.Any(word => query.Trim().Equals(word, StringComparison.OrdinalIgnoreCase));
                     
                 // Kiểm tra nếu là tin nhắn ngắn và có thể là chào hỏi
                 var isShortGreeting = query.Trim().Length <= 20 && 
@@ -135,8 +149,17 @@ Trợ lý AI:";
                 // Kiểm tra tin nhắn tự động của hệ thống
                 var isSystemGreeting = query.Contains("Xin chào! Tôi có thể giúp gì cho bạn về tuyển sinh", StringComparison.OrdinalIgnoreCase) ||
                     query.Contains("tôi có thể giúp gì cho bạn", StringComparison.OrdinalIgnoreCase);
+                
+                // LOẠI TRỪ các câu hỏi cụ thể về điểm chuẩn, học phí, ngành học
+                var isSpecificQuery = query.Contains("điểm chuẩn", StringComparison.OrdinalIgnoreCase) ||
+                    query.Contains("học phí", StringComparison.OrdinalIgnoreCase) ||
+                    query.Contains("ngành", StringComparison.OrdinalIgnoreCase) ||
+                    query.Contains("trường", StringComparison.OrdinalIgnoreCase) ||
+                    query.Contains("cntt", StringComparison.OrdinalIgnoreCase) ||
+                    query.Contains("fpt", StringComparison.OrdinalIgnoreCase) ||
+                    query.Contains("bao nhiêu", StringComparison.OrdinalIgnoreCase);
 
-                if (isGreeting || isShortGreeting || isSystemGreeting)
+                if ((isExactGreeting || isSimpleQuestion || isShortGreeting || isSystemGreeting) && !isSpecificQuery)
                 {
                     // Trả về ngữ cảnh chung cho tin nhắn chào hỏi
                     context.AppendLine("THÔNG TIN TỔNG QUAN VỀ HỆ THỐNG TUYỂN SINH:");
@@ -410,10 +433,40 @@ Trợ lý AI:";
                             m.University?.ShortName.Contains(query, StringComparison.OrdinalIgnoreCase) == true)
                             .ToList();
                         
-                        // Ưu tiên 5: Tìm theo tên ngành
-                        var majorNameMajors = majors.Where(m =>
-                            m.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                            m.Description?.Contains(query, StringComparison.OrdinalIgnoreCase) == true)
+                        // Ưu tiên 5: Tìm theo tên ngành (bao gồm từ viết tắt)
+                        var majorNameMajors = new List<Major>();
+                        
+                        // Mapping từ viết tắt sang tên ngành đầy đủ
+                        var majorKeywordMapping = new Dictionary<string, string[]>
+                        {
+                            { "cntt", new[] { "công nghệ thông tin", "computer science", "it", "khoa học máy tính" } },
+                            { "kt", new[] { "kế toán", "accounting", "kế toán kiểm toán" } },
+                            { "qtkd", new[] { "quản trị kinh doanh", "business administration", "quản trị" } },
+                            { "tcnh", new[] { "tài chính ngân hàng", "finance", "banking", "tài chính", "ngân hàng" } },
+                            { "nn", new[] { "ngoại ngữ", "foreign languages", "tiếng anh", "tiếng nhật", "tiếng hàn" } },
+                            { "xd", new[] { "xây dựng", "construction", "civil engineering" } },
+                            { "dh", new[] { "điện", "electrical", "điện tử", "electronic" } },
+                            { "co", new[] { "cơ khí", "mechanical", "machinery" } },
+                            { "hl", new[] { "hóa học", "chemistry", "chemical" } }
+                        };
+                        
+                        var queryLowerForMajor = query.ToLower();
+                        var majorSearchKeywords = new List<string> { query };
+                        
+                        // Mở rộng từ khóa tìm kiếm ngành
+                        foreach (var mapping in majorKeywordMapping)
+                        {
+                            if (queryLowerForMajor.Contains(mapping.Key))
+                            {
+                                majorSearchKeywords.AddRange(mapping.Value);
+                                Console.WriteLine($"DEBUG: Major search expanded for '{mapping.Key}' with: [{string.Join(", ", mapping.Value)}]");
+                            }
+                        }
+                        
+                        majorNameMajors = majors.Where(m =>
+                            majorSearchKeywords.Any(keyword =>
+                                m.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                                m.Description?.Contains(keyword, StringComparison.OrdinalIgnoreCase) == true))
                             .ToList();
                         
                         // Ưu tiên 6: Tìm theo keywords tổng quát (linh hoạt hơn)
@@ -578,21 +631,100 @@ Trợ lý AI:";
                     context.AppendLine();
                 }
 
-                // Lấy thông tin điểm chuẩn
+                // Lấy thông tin điểm chuẩn - LOGIC ĐƯỢC CẢI THIỆN
                 var admissionScores = await _admissionScoreRepository.GetAllAsync();
-                var relevantScores = admissionScores.Where(s =>
-                    s.Major?.University?.Name.Contains(query, StringComparison.OrdinalIgnoreCase) == true ||
-                    s.Major?.Name.Contains(query, StringComparison.OrdinalIgnoreCase) == true)
-                    .Take(10);
+                var relevantScores = new List<AdmissionScore>();
+
+                // Ưu tiên 1: Nếu đã tìm được ngành học cụ thể, lấy điểm chuẩn của những ngành đó
+                if (relevantMajors?.Any() == true)
+                {
+                    var majorIds = relevantMajors.Select(m => m.Id).ToList();
+                    relevantScores = admissionScores.Where(s => majorIds.Contains(s.MajorId)).ToList();
+                    Console.WriteLine($"DEBUG: Found {relevantScores.Count} admission scores from relevant majors");
+                }
+                
+                // Ưu tiên 2: Nếu chưa có điểm chuẩn từ ngành đã tìm, tìm kiếm theo từ khóa mở rộng
+                if (!relevantScores.Any())
+                {
+                    // Dictionary mapping từ viết tắt sang tên đầy đủ
+                    var searchKeywords = new Dictionary<string, string[]>
+                    {
+                        { "cntt", new[] { "công nghệ thông tin", "computer science", "it", "khoa học máy tính" } },
+                        { "kt", new[] { "kế toán", "accounting", "kế toán kiểm toán" } },
+                        { "qtkd", new[] { "quản trị kinh doanh", "business administration", "quản trị" } },
+                        { "tcnh", new[] { "tài chính ngân hàng", "finance", "banking", "tài chính", "ngân hàng" } },
+                        { "nn", new[] { "ngoại ngữ", "foreign languages", "tiếng anh", "tiếng nhật", "tiếng hàn" } },
+                        { "xd", new[] { "xây dựng", "construction", "civil engineering" } },
+                        { "dh", new[] { "điện", "electrical", "điện tử", "electronic" } },
+                        { "co", new[] { "cơ khí", "mechanical", "machinery" } },
+                        { "hl", new[] { "hóa học", "chemistry", "chemical" } },
+                        { "sp", new[] { "sư phạm", "education", "giáo dục" } },
+                        { "y", new[] { "y học", "medicine", "medical", "bác sĩ" } },
+                        { "dc", new[] { "dược", "pharmacy", "pharmaceutical" } },
+                        { "luat", new[] { "luật", "law", "legal" } },
+                        { "nong", new[] { "nông nghiệp", "agriculture", "agricultural" } },
+                        { "moi truong", new[] { "môi trường", "environment", "environmental" } }
+                    };
+
+                    var queryLower = query.ToLower();
+                    var expandedKeywords = new List<string> { query };
+
+                    // Mở rộng từ khóa tìm kiếm dựa trên mapping
+                    foreach (var mapping in searchKeywords)
+                    {
+                        if (queryLower.Contains(mapping.Key))
+                        {
+                            expandedKeywords.AddRange(mapping.Value);
+                            Console.WriteLine($"DEBUG: Expanded search for '{mapping.Key}' with keywords: [{string.Join(", ", mapping.Value)}]");
+                        }
+                    }
+
+                    // Tách keywords từ query để tìm kiếm linh hoạt hơn
+                    var queryWords = queryLower.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                        .Where(word => word.Length > 2).ToList();
+                    expandedKeywords.AddRange(queryWords);
+
+                    Console.WriteLine($"DEBUG: Final expanded keywords: [{string.Join(", ", expandedKeywords)}]");
+
+                    relevantScores = admissionScores.Where(s =>
+                        expandedKeywords.Any(keyword =>
+                            s.Major?.University?.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) == true ||
+                            s.Major?.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) == true))
+                        .Take(20).ToList();
+                        
+                    Console.WriteLine($"DEBUG: Found {relevantScores.Count} admission scores from keyword search");
+                }
 
                 if (relevantScores.Any())
                 {
                     context.AppendLine("THÔNG TIN ĐIỂM CHUẨN:");
-                    foreach (var score in relevantScores)
+                    
+                    // Nhóm theo trường và ngành để dễ đọc
+                    var scoresByUniversityAndMajor = relevantScores
+                        .GroupBy(s => new { 
+                            UniversityName = s.Major?.University?.Name ?? "Không xác định",
+                            MajorName = s.Major?.Name ?? "Không xác định"
+                        })
+                        .OrderBy(g => g.Key.UniversityName)
+                        .ThenBy(g => g.Key.MajorName);
+
+                    foreach (var group in scoresByUniversityAndMajor)
                     {
-                        context.AppendLine($"- {score.Major?.University?.Name} - {score.Major?.Name}: {score.Score} điểm (Năm {score.Year})");
+                        context.AppendLine($"🏫 {group.Key.UniversityName} - {group.Key.MajorName}:");
+                        
+                        var sortedScores = group.OrderByDescending(s => s.Year).Take(3); // Chỉ lấy 3 năm gần nhất
+                        foreach (var score in sortedScores)
+                        {
+                            context.AppendLine($"  • Năm {score.Year}: {score.Score} điểm");
+                            if (!string.IsNullOrEmpty(score.SubjectCombination))
+                                context.AppendLine($"    Tổ hợp môn: {score.SubjectCombination}");
+                            if (!string.IsNullOrEmpty(score.Note))
+                                context.AppendLine($"    Ghi chú: {score.Note}");
+                            if (score.AdmissionMethod?.Name != null)
+                                context.AppendLine($"    Phương thức: {score.AdmissionMethod.Name}");
+                        }
+                        context.AppendLine();
                     }
-                    context.AppendLine();
                 }
 
                 // Lấy tin tức tuyển sinh
