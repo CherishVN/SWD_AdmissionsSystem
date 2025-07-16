@@ -1,5 +1,6 @@
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Repositories;
+using AdmissionInfoSystem.DTOs;
 
 namespace AdmissionInfoSystem.Services
 {
@@ -40,6 +41,62 @@ namespace AdmissionInfoSystem.Services
         public async Task<IEnumerable<Major>> GetByUniversityIdAsync(int universityId)
         {
             return await _majorRepository.GetByUniversityIdAsync(universityId);
+        }
+
+        public async Task<PagedMajorDTO> GetPagedAsync(int page, int pageSize)
+        {
+            var (data, totalCount) = await _majorRepository.GetPagedAsync(page, pageSize);
+            
+            var majorDtos = data.Select(m => new MajorDTO
+            {
+                Id = m.Id,
+                Name = m.Name,
+                Code = m.Code,
+                Description = m.Description,
+                AdmissionScore = m.AdmissionScore,
+                Year = m.Year,
+                UniversityId = m.UniversityId,
+                ProgramId = m.ProgramId,
+                UniversityName = m.University?.Name,
+                ProgramName = m.Program?.Name
+            });
+
+            return new PagedMajorDTO
+            {
+                Data = majorDtos,
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            };
+        }
+
+        public async Task<PagedMajorDTO> GetPagedByUniversityIdAsync(int universityId, int page, int pageSize)
+        {
+            var (data, totalCount) = await _majorRepository.GetPagedByUniversityIdAsync(universityId, page, pageSize);
+            
+            var majorDtos = data.Select(m => new MajorDTO
+            {
+                Id = m.Id,
+                Name = m.Name,
+                Code = m.Code,
+                Description = m.Description,
+                AdmissionScore = m.AdmissionScore,
+                Year = m.Year,
+                UniversityId = m.UniversityId,
+                ProgramId = m.ProgramId,
+                UniversityName = m.University?.Name,
+                ProgramName = m.Program?.Name
+            });
+
+            return new PagedMajorDTO
+            {
+                Data = majorDtos,
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            };
         }
 
         public async Task<Major> UpdateAsync(Major major)

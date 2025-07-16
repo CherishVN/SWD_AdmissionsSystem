@@ -46,6 +46,27 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
+        // GET: api/AdmissionScores/paged?page=1&pageSize=10
+        [HttpGet("paged")]
+        public async Task<ActionResult<PagedAdmissionScoreDTO>> GetPagedAdmissionScores(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                // Validate parameters
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10; // Giới hạn tối đa 100 items/page
+
+                var pagedResult = await _admissionScoreService.GetPagedAsync(page, pageSize);
+                return Ok(pagedResult);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi lấy danh sách điểm chuẩn phân trang", error = ex.Message });
+            }
+        }
+
         // GET: api/AdmissionScores/5
         [HttpGet("{id}")]
         public async Task<ActionResult<AdmissionScoreDTO>> GetAdmissionScore(int id)
@@ -110,6 +131,28 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
+        // GET: api/AdmissionScores/major/5/paged?page=1&pageSize=10
+        [HttpGet("major/{majorId}/paged")]
+        public async Task<ActionResult<PagedAdmissionScoreDTO>> GetPagedAdmissionScoresByMajor(
+            int majorId,
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                // Validate parameters
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var pagedResult = await _admissionScoreService.GetPagedByMajorIdAsync(majorId, page, pageSize);
+                return Ok(pagedResult);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi lấy điểm chuẩn phân trang theo ngành", error = ex.Message });
+            }
+        }
+
         // GET: api/AdmissionScores/year/2024
         [HttpGet("year/{year}")]
         public async Task<ActionResult<IEnumerable<AdmissionScoreDTO>>> GetAdmissionScoresByYear(int year)
@@ -136,6 +179,28 @@ namespace AdmissionInfoSystem.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi khi lấy điểm chuẩn theo năm", error = ex.Message });
+            }
+        }
+
+        // GET: api/AdmissionScores/year/2024/paged?page=1&pageSize=10
+        [HttpGet("year/{year}/paged")]
+        public async Task<ActionResult<PagedAdmissionScoreDTO>> GetPagedAdmissionScoresByYear(
+            int year,
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                // Validate parameters
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var pagedResult = await _admissionScoreService.GetPagedByYearAsync(year, page, pageSize);
+                return Ok(pagedResult);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi lấy điểm chuẩn phân trang theo năm", error = ex.Message });
             }
         }
 
@@ -208,14 +273,6 @@ namespace AdmissionInfoSystem.Controllers
 
                 return CreatedAtAction(nameof(GetAdmissionScore), new { id = result.Id }, result);
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
-            }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi khi tạo điểm chuẩn", error = ex.Message });
@@ -225,11 +282,11 @@ namespace AdmissionInfoSystem.Controllers
         // PUT: api/AdmissionScores/5
         [HttpPut("{id}")]
         [AdminAuthorize]
-        public async Task<IActionResult> PutAdmissionScore(int id, UpdateAdmissionScoreDTO updateDto)
+        public async Task<IActionResult> PutAdmissionScore(int id, AdmissionScoreDTO scoreDto)
         {
             try
             {
-                if (id != updateDto.Id)
+                if (id != scoreDto.Id)
                 {
                     return BadRequest(new { message = "ID không khớp" });
                 }
@@ -241,40 +298,17 @@ namespace AdmissionInfoSystem.Controllers
 
                 var admissionScore = new AdmissionScore
                 {
-                    Id = updateDto.Id,
-                    MajorId = updateDto.MajorId,
-                    Year = updateDto.Year,
-                    Score = updateDto.Score,
-                    AdmissionMethodId = updateDto.AdmissionMethodId,
-                    Note = updateDto.Note,
-                    SubjectCombination = updateDto.SubjectCombination
+                    Id = scoreDto.Id,
+                    MajorId = scoreDto.MajorId,
+                    Year = scoreDto.Year,
+                    Score = scoreDto.Score,
+                    AdmissionMethodId = scoreDto.AdmissionMethodId,
+                    Note = scoreDto.Note,
+                    SubjectCombination = scoreDto.SubjectCombination
                 };
 
-                var updatedScore = await _admissionScoreService.UpdateAsync(admissionScore);
-
-                var result = new AdmissionScoreDTO
-                {
-                    Id = updatedScore.Id,
-                    MajorId = updatedScore.MajorId,
-                    Year = updatedScore.Year,
-                    Score = updatedScore.Score,
-                    AdmissionMethodId = updatedScore.AdmissionMethodId,
-                    Note = updatedScore.Note,
-                    SubjectCombination = updatedScore.SubjectCombination,
-                    MajorName = updatedScore.Major?.Name,
-                    UniversityName = updatedScore.Major?.University?.Name,
-                    AdmissionMethodName = updatedScore.AdmissionMethod?.Name
-                };
-
-                return Ok(result);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { message = ex.Message });
+                await _admissionScoreService.UpdateAsync(admissionScore);
+                return NoContent();
             }
             catch (Exception ex)
             {
@@ -289,14 +323,13 @@ namespace AdmissionInfoSystem.Controllers
         {
             try
             {
-                var result = await _admissionScoreService.DeleteAsync(id);
-
-                if (!result)
+                var success = await _admissionScoreService.DeleteAsync(id);
+                if (!success)
                 {
-                    return NotFound(new { message = "Không tìm thấy điểm chuẩn để xóa" });
+                    return NotFound(new { message = "Không tìm thấy điểm chuẩn" });
                 }
 
-                return Ok(new { message = "Xóa điểm chuẩn thành công" });
+                return NoContent();
             }
             catch (Exception ex)
             {

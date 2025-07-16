@@ -1,6 +1,7 @@
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Repositories;
 using AdmissionInfoSystem.Services.Interface;
+using AdmissionInfoSystem.DTOs;
 
 namespace AdmissionInfoSystem.Services.Implements
 {
@@ -43,6 +44,118 @@ namespace AdmissionInfoSystem.Services.Implements
             return await _unitOfWork.AdmissionScores.GetByMajorYearAndMethodAsync(majorId, year, admissionMethodId);
         }
 
+        public async Task<PagedAdmissionScoreDTO> GetPagedAsync(int page, int pageSize)
+        {
+            var (data, totalCount) = await _unitOfWork.AdmissionScores.GetPagedAsync(page, pageSize);
+            
+            var scoreDtos = data.Select(s => new AdmissionScoreDTO
+            {
+                Id = s.Id,
+                MajorId = s.MajorId,
+                Year = s.Year,
+                Score = s.Score,
+                AdmissionMethodId = s.AdmissionMethodId,
+                Note = s.Note,
+                SubjectCombination = s.SubjectCombination,
+                MajorName = s.Major?.Name,
+                UniversityName = s.Major?.University?.Name,
+                AdmissionMethodName = s.AdmissionMethod?.Name
+            });
+
+            return new PagedAdmissionScoreDTO
+            {
+                Data = scoreDtos,
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            };
+        }
+
+        public async Task<PagedAdmissionScoreDTO> GetPagedByYearAsync(int year, int page, int pageSize)
+        {
+            var (data, totalCount) = await _unitOfWork.AdmissionScores.GetPagedByYearAsync(year, page, pageSize);
+            
+            var scoreDtos = data.Select(s => new AdmissionScoreDTO
+            {
+                Id = s.Id,
+                MajorId = s.MajorId,
+                Year = s.Year,
+                Score = s.Score,
+                AdmissionMethodId = s.AdmissionMethodId,
+                Note = s.Note,
+                SubjectCombination = s.SubjectCombination,
+                MajorName = s.Major?.Name,
+                UniversityName = s.Major?.University?.Name,
+                AdmissionMethodName = s.AdmissionMethod?.Name
+            });
+
+            return new PagedAdmissionScoreDTO
+            {
+                Data = scoreDtos,
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            };
+        }
+
+        public async Task<PagedAdmissionScoreDTO> GetPagedByMajorIdAsync(int majorId, int page, int pageSize)
+        {
+            var (data, totalCount) = await _unitOfWork.AdmissionScores.GetPagedByMajorIdAsync(majorId, page, pageSize);
+            
+            var scoreDtos = data.Select(s => new AdmissionScoreDTO
+            {
+                Id = s.Id,
+                MajorId = s.MajorId,
+                Year = s.Year,
+                Score = s.Score,
+                AdmissionMethodId = s.AdmissionMethodId,
+                Note = s.Note,
+                SubjectCombination = s.SubjectCombination,
+                MajorName = s.Major?.Name,
+                UniversityName = s.Major?.University?.Name,
+                AdmissionMethodName = s.AdmissionMethod?.Name
+            });
+
+            return new PagedAdmissionScoreDTO
+            {
+                Data = scoreDtos,
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            };
+        }
+
+        public async Task<PagedAdmissionScoreDTO> GetPagedByUniversityIdAsync(int universityId, int page, int pageSize)
+        {
+            var (data, totalCount) = await _unitOfWork.AdmissionScores.GetPagedByUniversityIdAsync(universityId, page, pageSize);
+            
+            var scoreDtos = data.Select(s => new AdmissionScoreDTO
+            {
+                Id = s.Id,
+                MajorId = s.MajorId,
+                Year = s.Year,
+                Score = s.Score,
+                AdmissionMethodId = s.AdmissionMethodId,
+                Note = s.Note,
+                SubjectCombination = s.SubjectCombination,
+                MajorName = s.Major?.Name,
+                UniversityName = s.Major?.University?.Name,
+                AdmissionMethodName = s.AdmissionMethod?.Name
+            });
+
+            return new PagedAdmissionScoreDTO
+            {
+                Data = scoreDtos,
+                Page = page,
+                PageSize = pageSize,
+                TotalItems = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            };
+        }
+
         public async Task<AdmissionScore> CreateAsync(AdmissionScore admissionScore)
         {
             // Kiểm tra xem Major có tồn tại không
@@ -52,29 +165,22 @@ namespace AdmissionInfoSystem.Services.Implements
                 throw new ArgumentException("Major không tồn tại");
             }
 
-            // Kiểm tra xem AdmissionMethod có tồn tại không (nếu có)
-            if (admissionScore.AdmissionMethodId.HasValue)
-            {
-                var admissionMethod = await _unitOfWork.AdmissionMethods.GetByIdAsync(admissionScore.AdmissionMethodId.Value);
-                if (admissionMethod == null)
-                {
-                    throw new ArgumentException("Admission Method không tồn tại");
-                }
-            }
+            // Kiểm tra xem điểm chuẩn đã tồn tại cho ngành, năm và phương thức tuyển sinh này chưa
+            var existingScore = await _unitOfWork.AdmissionScores.GetByMajorYearAndMethodAsync(
+                admissionScore.MajorId, 
+                admissionScore.Year, 
+                admissionScore.AdmissionMethodId
+            );
 
-            // Kiểm tra xem đã có điểm cho major, year và method này chưa
-            var existingScore = await _unitOfWork.AdmissionScores
-                .GetByMajorYearAndMethodAsync(admissionScore.MajorId, admissionScore.Year, admissionScore.AdmissionMethodId);
-            
             if (existingScore != null)
             {
-                throw new InvalidOperationException("Điểm chuẩn cho ngành, năm và phương thức tuyển sinh này đã tồn tại");
+                throw new InvalidOperationException("Điểm chuẩn cho ngành này trong năm và phương thức tuyển sinh đã tồn tại");
             }
 
             await _unitOfWork.AdmissionScores.AddAsync(admissionScore);
             await _unitOfWork.SaveChangesAsync();
-            
-            return await _unitOfWork.AdmissionScores.GetByIdAsync(admissionScore.Id) ?? admissionScore;
+
+            return admissionScore;
         }
 
         public async Task<AdmissionScore> UpdateAsync(AdmissionScore admissionScore)
@@ -82,7 +188,7 @@ namespace AdmissionInfoSystem.Services.Implements
             var existingScore = await _unitOfWork.AdmissionScores.GetByIdAsync(admissionScore.Id);
             if (existingScore == null)
             {
-                throw new ArgumentException("Admission Score không tồn tại");
+                throw new ArgumentException("Điểm chuẩn không tồn tại");
             }
 
             // Kiểm tra xem Major có tồn tại không
@@ -92,36 +198,22 @@ namespace AdmissionInfoSystem.Services.Implements
                 throw new ArgumentException("Major không tồn tại");
             }
 
-            // Kiểm tra xem AdmissionMethod có tồn tại không (nếu có)
-            if (admissionScore.AdmissionMethodId.HasValue)
-            {
-                var admissionMethod = await _unitOfWork.AdmissionMethods.GetByIdAsync(admissionScore.AdmissionMethodId.Value);
-                if (admissionMethod == null)
-                {
-                    throw new ArgumentException("Admission Method không tồn tại");
-                }
-            }
+            // Kiểm tra trùng lặp (trừ chính nó)
+            var duplicateScore = await _unitOfWork.AdmissionScores.GetByMajorYearAndMethodAsync(
+                admissionScore.MajorId, 
+                admissionScore.Year, 
+                admissionScore.AdmissionMethodId
+            );
 
-            // Kiểm tra xem có bản ghi trùng lặp khác không
-            var duplicateScore = await _unitOfWork.AdmissionScores
-                .GetByMajorYearAndMethodAsync(admissionScore.MajorId, admissionScore.Year, admissionScore.AdmissionMethodId);
-            
             if (duplicateScore != null && duplicateScore.Id != admissionScore.Id)
             {
-                throw new InvalidOperationException("Điểm chuẩn cho ngành, năm và phương thức tuyển sinh này đã tồn tại");
+                throw new InvalidOperationException("Điểm chuẩn cho ngành này trong năm và phương thức tuyển sinh đã tồn tại");
             }
 
-            existingScore.MajorId = admissionScore.MajorId;
-            existingScore.Year = admissionScore.Year;
-            existingScore.Score = admissionScore.Score;
-            existingScore.AdmissionMethodId = admissionScore.AdmissionMethodId;
-            existingScore.Note = admissionScore.Note;
-            existingScore.SubjectCombination = admissionScore.SubjectCombination;
-
-            await _unitOfWork.AdmissionScores.UpdateAsync(existingScore);
+            await _unitOfWork.AdmissionScores.UpdateAsync(admissionScore);
             await _unitOfWork.SaveChangesAsync();
-            
-            return await _unitOfWork.AdmissionScores.GetByIdAsync(existingScore.Id) ?? existingScore;
+
+            return admissionScore;
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -134,7 +226,7 @@ namespace AdmissionInfoSystem.Services.Implements
 
             await _unitOfWork.AdmissionScores.RemoveAsync(admissionScore);
             await _unitOfWork.SaveChangesAsync();
-            
+
             return true;
         }
 

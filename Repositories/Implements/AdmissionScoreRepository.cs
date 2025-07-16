@@ -57,6 +57,77 @@ namespace AdmissionInfoSystem.Repositories.Implements
                                           ads.AdmissionMethodId == admissionMethodId);
         }
 
+        public async Task<(IEnumerable<AdmissionScore> Data, int TotalCount)> GetPagedAsync(int page, int pageSize)
+        {
+            var totalCount = await _context.AdmissionScores.CountAsync();
+            
+            var data = await _context.AdmissionScores
+                .Include(ads => ads.Major)
+                .ThenInclude(m => m.University)
+                .Include(ads => ads.AdmissionMethod)
+                .OrderByDescending(ads => ads.Year)
+                .ThenBy(ads => ads.Major.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalCount);
+        }
+
+        public async Task<(IEnumerable<AdmissionScore> Data, int TotalCount)> GetPagedByYearAsync(int year, int page, int pageSize)
+        {
+            var totalCount = await _context.AdmissionScores.Where(ads => ads.Year == year).CountAsync();
+            
+            var data = await _context.AdmissionScores
+                .Include(ads => ads.Major)
+                .ThenInclude(m => m.University)
+                .Include(ads => ads.AdmissionMethod)
+                .Where(ads => ads.Year == year)
+                .OrderBy(ads => ads.Major.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalCount);
+        }
+
+        public async Task<(IEnumerable<AdmissionScore> Data, int TotalCount)> GetPagedByMajorIdAsync(int majorId, int page, int pageSize)
+        {
+            var totalCount = await _context.AdmissionScores.Where(ads => ads.MajorId == majorId).CountAsync();
+            
+            var data = await _context.AdmissionScores
+                .Include(ads => ads.Major)
+                .ThenInclude(m => m.University)
+                .Include(ads => ads.AdmissionMethod)
+                .Where(ads => ads.MajorId == majorId)
+                .OrderByDescending(ads => ads.Year)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalCount);
+        }
+
+        public async Task<(IEnumerable<AdmissionScore> Data, int TotalCount)> GetPagedByUniversityIdAsync(int universityId, int page, int pageSize)
+        {
+            var totalCount = await _context.AdmissionScores
+                .Where(ads => ads.Major.UniversityId == universityId)
+                .CountAsync();
+            
+            var data = await _context.AdmissionScores
+                .Include(ads => ads.Major)
+                .ThenInclude(m => m.University)
+                .Include(ads => ads.AdmissionMethod)
+                .Where(ads => ads.Major.UniversityId == universityId)
+                .OrderByDescending(ads => ads.Year)
+                .ThenBy(ads => ads.Major.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (data, totalCount);
+        }
+
         public new async Task<IEnumerable<AdmissionScore>> GetAllAsync()
         {
             return await _context.AdmissionScores

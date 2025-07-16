@@ -159,6 +159,35 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
+        // GET: api/UniversityView/my-majors/paged?page=1&pageSize=10 - Xem ngành học của trường (phân trang)
+        [HttpGet("my-majors/paged")]
+        [UniversityAuthorize]
+        public async Task<ActionResult<PagedMajorDTO>> GetMyMajorsPaged(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var universityId = await GetUserUniversityId();
+                if (universityId == null)
+                {
+                    return BadRequest(new { message = "Tài khoản chưa được gán trường đại học" });
+                }
+
+                // Validate parameters
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var pagedResult = await _majorService.GetPagedByUniversityIdAsync(universityId.Value, page, pageSize);
+                return Ok(pagedResult);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách ngành học phân trang");
+                return StatusCode(500, new { message = "Lỗi server" });
+            }
+        }
+
         // GET: api/UniversityView/my-admission-methods - Xem phương thức tuyển sinh
         [HttpGet("my-admission-methods")]
         [UniversityAuthorize]
@@ -238,6 +267,35 @@ namespace AdmissionInfoSystem.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy điểm chuẩn");
+                return StatusCode(500, new { message = "Lỗi server" });
+            }
+        }
+
+        // GET: api/UniversityView/my-admission-scores/paged?page=1&pageSize=10 - Xem điểm chuẩn của trường (phân trang)
+        [HttpGet("my-admission-scores/paged")]
+        [UniversityAuthorize]
+        public async Task<ActionResult<PagedAdmissionScoreDTO>> GetMyAdmissionScoresPaged(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var universityId = await GetUserUniversityId();
+                if (universityId == null)
+                {
+                    return BadRequest(new { message = "Tài khoản chưa được gán trường đại học" });
+                }
+
+                // Validate parameters
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+                var pagedResult = await _scoreService.GetPagedByUniversityIdAsync(universityId.Value, page, pageSize);
+                return Ok(pagedResult);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy điểm chuẩn phân trang");
                 return StatusCode(500, new { message = "Lỗi server" });
             }
         }
