@@ -1,16 +1,19 @@
 using AdmissionInfoSystem.Models;
 using AdmissionInfoSystem.Repositories;
 using AdmissionInfoSystem.DTOs;
+using AdmissionInfoSystem.Services.Interface;
 
 namespace AdmissionInfoSystem.Services
 {
     public class MajorService : IMajorService
     {
         private readonly IMajorRepository _majorRepository;
+        private readonly IAdmissionScoreService _admissionScoreService;
 
-        public MajorService(IMajorRepository majorRepository)
+        public MajorService(IMajorRepository majorRepository, IAdmissionScoreService admissionScoreService)
         {
             _majorRepository = majorRepository;
+            _admissionScoreService = admissionScoreService;
         }
 
         public async Task<Major> CreateAsync(Major major)
@@ -21,10 +24,32 @@ namespace AdmissionInfoSystem.Services
 
         public async Task DeleteAsync(int id)
         {
-            var major = await _majorRepository.GetByIdAsync(id);
-            if (major != null)
+            try
             {
+                var major = await _majorRepository.GetByIdAsync(id);
+                if (major == null)
+                {
+                    return; // Major not found, nothing to delete
+                }
+
+                // Check if there are related AdmissionScores
+                var relatedScores = await _admissionScoreService.GetByMajorIdAsync(id);
+                if (relatedScores.Any())
+                {
+                    // Delete all related AdmissionScores first
+                    foreach (var score in relatedScores)
+                    {
+                        await _admissionScoreService.DeleteAsync(score.Id);
+                    }
+                }
+
+                // Now delete the major
                 await _majorRepository.RemoveAsync(major);
+            }
+            catch (Exception ex)
+            {
+                // Log the error and rethrow with more context
+                throw new InvalidOperationException($"Không thể xóa ngành học. Lỗi: {ex.Message}", ex);
             }
         }
 

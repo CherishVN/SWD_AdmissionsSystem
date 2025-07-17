@@ -14,6 +14,13 @@ namespace AdmissionInfoSystem.Repositories.Implements
             _context = context;
         }
 
+        // Override to prevent auto-save when using UnitOfWork pattern
+        public new async Task AddAsync(AdmissionScore entity)
+        {
+            await _context.AdmissionScores.AddAsync(entity);
+            // Don't call SaveChanges here - let UnitOfWork handle it
+        }
+
         public async Task<IEnumerable<AdmissionScore>> GetByMajorIdAsync(int majorId)
         {
             return await _context.AdmissionScores
@@ -52,6 +59,15 @@ namespace AdmissionInfoSystem.Repositories.Implements
                 .Include(ads => ads.Major)
                 .ThenInclude(m => m.University)
                 .Include(ads => ads.AdmissionMethod)
+                .FirstOrDefaultAsync(ads => ads.MajorId == majorId && 
+                                          ads.Year == year && 
+                                          ads.AdmissionMethodId == admissionMethodId);
+        }
+
+        public async Task<AdmissionScore?> GetByMajorYearAndMethodAsyncNoTracking(int majorId, int year, int? admissionMethodId)
+        {
+            return await _context.AdmissionScores
+                .AsNoTracking()
                 .FirstOrDefaultAsync(ads => ads.MajorId == majorId && 
                                           ads.Year == year && 
                                           ads.AdmissionMethodId == admissionMethodId);
