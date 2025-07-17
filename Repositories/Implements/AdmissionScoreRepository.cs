@@ -14,6 +14,13 @@ namespace AdmissionInfoSystem.Repositories.Implements
             _context = context;
         }
 
+        // Override to prevent auto-save when using UnitOfWork pattern
+        public new async Task AddAsync(AdmissionScore entity)
+        {
+            await _context.AdmissionScores.AddAsync(entity);
+            // Don't call SaveChanges here - let UnitOfWork handle it
+        }
+
         public async Task<IEnumerable<AdmissionScore>> GetByMajorIdAsync(int majorId)
         {
             return await _context.AdmissionScores
