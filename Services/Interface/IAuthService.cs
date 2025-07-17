@@ -13,5 +13,8 @@ namespace AdmissionInfoSystem.Services.Interface
         Task<User?> GetUserByEmailAsync(string email);
         Task<User?> GetUserByFirebaseUidAsync(string firebaseUid);
         Task<AuthResponseDTO> VerifyEmailAsync(VerifyEmailDTO verifyEmailDto);
+        Task<bool> CheckEmailExistsAsync(string email);
+        Task<User?> GetUserInfoForPasswordResetAsync(string email);
+        Task<bool> UpdatePasswordAfterResetAsync(string email, string newPassword);
     }
 } 

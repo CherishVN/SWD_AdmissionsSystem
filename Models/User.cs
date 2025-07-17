@@ -31,25 +31,23 @@ namespace AdmissionInfoSystem.Models
         
         [Required]
         [StringLength(20)]
-        public string Role { get; set; } = "student"; // student, university, admin
+        public string Role { get; set; } = "student";
         
         [StringLength(20)]
-        public string Provider { get; set; } = "email"; // email, google
+        public string Provider { get; set; } = "email";
         
         public bool EmailVerified { get; set; } = false;
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
+        
         public DateTime? LastLoginAt { get; set; }
         
-        // Foreign key
         public int? UniversityId { get; set; }
         
-        // Navigation property
         [ForeignKey("UniversityId")]
         public virtual University? University { get; set; }
         
-        // Navigation property for ChatSessions
         public virtual ICollection<ChatSession> ChatSessions { get; set; } = new List<ChatSession>();
     }
 } 

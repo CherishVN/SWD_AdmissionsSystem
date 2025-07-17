@@ -258,6 +258,65 @@ namespace AdmissionInfoSystem.Services.Implements
             }
         }
 
+        public async Task<bool> CheckEmailExistsAsync(string email)
+        {
+            try
+            {
+                var user = await _unitOfWork.Users.GetUserByEmailAsync(email);
+                return user != null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Check email exists error for email: {Email}", email);
+                throw;
+            }
+        }
+
+        public async Task<User?> GetUserInfoForPasswordResetAsync(string email)
+        {
+            try
+            {
+                var user = await _unitOfWork.Users.GetUserByEmailAsync(email);
+                return user;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Get user info for password reset error for email: {Email}", email);
+                throw;
+            }
+        }
+
+        public async Task<bool> UpdatePasswordAfterResetAsync(string email, string newPassword)
+        {
+            try
+            {
+                var user = await _unitOfWork.Users.GetUserByEmailAsync(email);
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found for password reset: {Email}", email);
+                    return false;
+                }
+
+                // Hash the new password
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                
+                // Update password and provider
+                user.PasswordHash = hashedPassword;
+                user.Provider = "email"; // Set provider to email since they now have a password
+
+                await _unitOfWork.Users.UpdateAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Password updated successfully for user: {Email}", email);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Update password after reset error for email: {Email}", email);
+                throw;
+            }
+        }
+
         private UserDTO MapToUserDTO(User user)
         {
             return new UserDTO
