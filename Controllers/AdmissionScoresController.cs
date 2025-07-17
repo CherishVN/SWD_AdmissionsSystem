@@ -300,7 +300,7 @@ namespace AdmissionInfoSystem.Controllers
         // PUT: api/AdmissionScores/5
         [HttpPut("{id}")]
         [AdminAuthorize]
-        public async Task<IActionResult> PutAdmissionScore(int id, AdmissionScoreDTO scoreDto)
+        public async Task<IActionResult> PutAdmissionScore(int id, UpdateAdmissionScoreDTO scoreDto)
         {
             try
             {

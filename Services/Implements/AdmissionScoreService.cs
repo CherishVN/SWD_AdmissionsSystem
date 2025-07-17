@@ -197,7 +197,7 @@ namespace AdmissionInfoSystem.Services.Implements
                 throw new ArgumentException("Major không tồn tại");
             }
 
-            var duplicateScore = await _unitOfWork.AdmissionScores.GetByMajorYearAndMethodAsync(
+            var duplicateScore = await _unitOfWork.AdmissionScores.GetByMajorYearAndMethodAsyncNoTracking(
                 admissionScore.MajorId, 
                 admissionScore.Year, 
                 admissionScore.AdmissionMethodId
@@ -208,10 +208,17 @@ namespace AdmissionInfoSystem.Services.Implements
                 throw new InvalidOperationException("Điểm chuẩn cho ngành này trong năm và phương thức tuyển sinh đã tồn tại");
             }
 
-            await _unitOfWork.AdmissionScores.UpdateAsync(admissionScore);
+            // Cập nhật các thuộc tính của existing entity thay vì tạo mới
+            existingScore.MajorId = admissionScore.MajorId;
+            existingScore.Year = admissionScore.Year;
+            existingScore.Score = admissionScore.Score;
+            existingScore.AdmissionMethodId = admissionScore.AdmissionMethodId;
+            existingScore.Note = admissionScore.Note;
+            existingScore.SubjectCombination = admissionScore.SubjectCombination;
+
             await _unitOfWork.SaveChangesAsync();
 
-            return admissionScore;
+            return existingScore;
         }
 
         public async Task<bool> DeleteAsync(int id)

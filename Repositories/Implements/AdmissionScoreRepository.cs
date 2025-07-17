@@ -57,6 +57,15 @@ namespace AdmissionInfoSystem.Repositories.Implements
                                           ads.AdmissionMethodId == admissionMethodId);
         }
 
+        public async Task<AdmissionScore?> GetByMajorYearAndMethodAsyncNoTracking(int majorId, int year, int? admissionMethodId)
+        {
+            return await _context.AdmissionScores
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ads => ads.MajorId == majorId && 
+                                          ads.Year == year && 
+                                          ads.AdmissionMethodId == admissionMethodId);
+        }
+
         public async Task<(IEnumerable<AdmissionScore> Data, int TotalCount)> GetPagedAsync(int page, int pageSize)
         {
             var totalCount = await _context.AdmissionScores.CountAsync();
