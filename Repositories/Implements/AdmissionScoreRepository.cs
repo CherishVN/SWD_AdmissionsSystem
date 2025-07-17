@@ -147,5 +147,16 @@ namespace AdmissionInfoSystem.Repositories.Implements
                 .Include(ads => ads.AdmissionMethod)
                 .FirstOrDefaultAsync(ads => ads.Id == id);
         }
+
+        public async Task<IEnumerable<AdmissionScore>> GetByUniversityIdAsync(int universityId)
+        {
+            return await _context.AdmissionScores
+                .Include(ads => ads.Major)
+                .Include(ads => ads.AdmissionMethod)
+                .Where(ads => ads.Major.UniversityId == universityId)
+                .OrderByDescending(ads => ads.Year)
+                .ThenBy(ads => ads.Major.Name)
+                .ToListAsync();
+        }
     }
 } 

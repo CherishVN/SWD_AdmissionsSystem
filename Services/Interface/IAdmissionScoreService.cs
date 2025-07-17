@@ -10,6 +10,7 @@ namespace AdmissionInfoSystem.Services.Interface
         Task<IEnumerable<AdmissionScore>> GetByMajorIdAsync(int majorId);
         Task<IEnumerable<AdmissionScore>> GetByYearAsync(int year);
         Task<IEnumerable<AdmissionScore>> GetByMajorAndYearAsync(int majorId, int year);
+        Task<IEnumerable<AdmissionScore>> GetByUniversityIdAsync(int universityId);
         Task<AdmissionScore?> GetByMajorYearAndMethodAsync(int majorId, int year, int? admissionMethodId);
         Task<PagedAdmissionScoreDTO> GetPagedAsync(int page, int pageSize);
         Task<PagedAdmissionScoreDTO> GetPagedByYearAsync(int year, int page, int pageSize);

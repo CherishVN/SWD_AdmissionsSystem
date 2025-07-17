@@ -46,7 +46,6 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
-        // GET: api/AdmissionScores/paged?page=1&pageSize=10
         [HttpGet("paged")]
         public async Task<ActionResult<PagedAdmissionScoreDTO>> GetPagedAdmissionScores(
             [FromQuery] int page = 1, 
@@ -54,9 +53,8 @@ namespace AdmissionInfoSystem.Controllers
         {
             try
             {
-                // Validate parameters
                 if (page < 1) page = 1;
-                if (pageSize < 1 || pageSize > 100) pageSize = 10; // Giới hạn tối đa 100 items/page
+                if (pageSize < 1 || pageSize > 100) pageSize = 10;
 
                 var pagedResult = await _admissionScoreService.GetPagedAsync(page, pageSize);
                 return Ok(pagedResult);
@@ -67,7 +65,6 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
-        // GET: api/AdmissionScores/5
         [HttpGet("{id}")]
         public async Task<ActionResult<AdmissionScoreDTO>> GetAdmissionScore(int id)
         {
@@ -102,7 +99,6 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
-        // GET: api/AdmissionScores/major/5
         [HttpGet("major/{majorId}")]
         public async Task<ActionResult<IEnumerable<AdmissionScoreDTO>>> GetAdmissionScoresByMajor(int majorId)
         {
@@ -131,7 +127,6 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
-        // GET: api/AdmissionScores/major/5/paged?page=1&pageSize=10
         [HttpGet("major/{majorId}/paged")]
         public async Task<ActionResult<PagedAdmissionScoreDTO>> GetPagedAdmissionScoresByMajor(
             int majorId,
@@ -140,7 +135,6 @@ namespace AdmissionInfoSystem.Controllers
         {
             try
             {
-                // Validate parameters
                 if (page < 1) page = 1;
                 if (pageSize < 1 || pageSize > 100) pageSize = 10;
 
@@ -153,7 +147,6 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
-        // GET: api/AdmissionScores/year/2024
         [HttpGet("year/{year}")]
         public async Task<ActionResult<IEnumerable<AdmissionScoreDTO>>> GetAdmissionScoresByYear(int year)
         {
@@ -182,7 +175,6 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
-        // GET: api/AdmissionScores/year/2024/paged?page=1&pageSize=10
         [HttpGet("year/{year}/paged")]
         public async Task<ActionResult<PagedAdmissionScoreDTO>> GetPagedAdmissionScoresByYear(
             int year,
@@ -191,7 +183,6 @@ namespace AdmissionInfoSystem.Controllers
         {
             try
             {
-                // Validate parameters
                 if (page < 1) page = 1;
                 if (pageSize < 1 || pageSize > 100) pageSize = 10;
 
@@ -204,7 +195,6 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
-        // GET: api/AdmissionScores/major/5/year/2024
         [HttpGet("major/{majorId}/year/{year}")]
         public async Task<ActionResult<IEnumerable<AdmissionScoreDTO>>> GetAdmissionScoresByMajorAndYear(int majorId, int year)
         {
@@ -233,7 +223,35 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
-        // POST: api/AdmissionScores
+        [HttpGet("university/{universityId}")]
+        public async Task<ActionResult<IEnumerable<AdmissionScoreDTO>>> GetAdmissionScoresByUniversity(int universityId)
+        {
+            try
+            {
+                var admissionScores = await _admissionScoreService.GetByUniversityIdAsync(universityId);
+
+                var result = admissionScores.Select(ads => new AdmissionScoreDTO
+                {
+                    Id = ads.Id,
+                    MajorId = ads.MajorId,
+                    Year = ads.Year,
+                    Score = ads.Score,
+                    AdmissionMethodId = ads.AdmissionMethodId,
+                    Note = ads.Note,
+                    SubjectCombination = ads.SubjectCombination,
+                    MajorName = ads.Major?.Name,
+                    UniversityName = ads.Major?.University?.Name,
+                    AdmissionMethodName = ads.AdmissionMethod?.Name
+                });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi lấy điểm chuẩn theo trường đại học", error = ex.Message });
+            }
+        }
+
         [HttpPost]
         [AdminAuthorize]
         public async Task<ActionResult<AdmissionScoreDTO>> PostAdmissionScore(CreateAdmissionScoreDTO createDto)

@@ -12,5 +12,6 @@ namespace AdmissionInfoSystem.Repositories.Interface
         Task<(IEnumerable<AdmissionScore> Data, int TotalCount)> GetPagedByYearAsync(int year, int page, int pageSize);
         Task<(IEnumerable<AdmissionScore> Data, int TotalCount)> GetPagedByMajorIdAsync(int majorId, int page, int pageSize);
         Task<(IEnumerable<AdmissionScore> Data, int TotalCount)> GetPagedByUniversityIdAsync(int universityId, int page, int pageSize);
+        Task<IEnumerable<AdmissionScore>> GetByUniversityIdAsync(int universityId);
     }
 } 

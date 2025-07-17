@@ -191,14 +191,12 @@ namespace AdmissionInfoSystem.Services.Implements
                 throw new ArgumentException("Điểm chuẩn không tồn tại");
             }
 
-            // Kiểm tra xem Major có tồn tại không
             var major = await _unitOfWork.Majors.GetByIdAsync(admissionScore.MajorId);
             if (major == null)
             {
                 throw new ArgumentException("Major không tồn tại");
             }
 
-            // Kiểm tra trùng lặp (trừ chính nó)
             var duplicateScore = await _unitOfWork.AdmissionScores.GetByMajorYearAndMethodAsync(
                 admissionScore.MajorId, 
                 admissionScore.Year, 
@@ -234,6 +232,11 @@ namespace AdmissionInfoSystem.Services.Implements
         {
             var admissionScore = await _unitOfWork.AdmissionScores.GetByIdAsync(id);
             return admissionScore != null;
+        }
+
+        public async Task<IEnumerable<AdmissionScore>> GetByUniversityIdAsync(int universityId)
+        {
+            return await _unitOfWork.AdmissionScores.GetByUniversityIdAsync(universityId);
         }
     }
 } 
