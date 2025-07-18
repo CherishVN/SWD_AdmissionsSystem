@@ -190,7 +190,13 @@ namespace AdmissionInfoSystem.Controllers
                 university.Ranking = updateDto.Ranking;
                 university.RankingCriteria = updateDto.RankingCriteria;
                 university.Locations = updateDto.Locations;
-                university.Logo = updateDto.Logo;
+                
+                // Chỉ cập nhật Logo khi có giá trị mới, giữ nguyên logo cũ khi không gửi
+                if (!string.IsNullOrEmpty(updateDto.Logo))
+                {
+                    university.Logo = updateDto.Logo;
+                }
+                
                 university.Type = updateDto.Type;
 
                 await _universityService.UpdateUniversityAsync(university);
