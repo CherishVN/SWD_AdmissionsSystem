@@ -139,5 +139,67 @@ namespace AdmissionInfoSystem.Controllers
                 return StatusCode(500, new { message = "Lỗi server" });
             }
         }
+
+        [HttpGet("check-availability")]
+        public async Task<IActionResult> CheckEmailAvailability([FromQuery] string email)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(email))
+                {
+                    return BadRequest(new { message = "Email không được để trống" });
+                }
+                
+                var userInfo = await _authService.GetUserInfoForPasswordResetAsync(email);
+                
+                if (userInfo == null)
+                {
+                    return Ok(new { 
+                        exists = false,
+                        message = "Email chưa được đăng ký"
+                    });
+                }
+                
+                return Ok(new { 
+                    exists = true,
+                    provider = userInfo.Provider,
+                    hasPassword = !string.IsNullOrEmpty(userInfo.PasswordHash),
+                    message = "Email đã tồn tại"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Check email availability error for: {Email}", email);
+                return StatusCode(500, new { message = "Lỗi server" });
+            }
+        }
+
+        [HttpPut("update-password-after-reset")]
+        public async Task<IActionResult> UpdatePasswordAfterReset([FromBody] UpdatePasswordAfterResetDTO request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.NewPassword))
+                {
+                    return BadRequest(new { message = "Email và mật khẩu mới không được để trống" });
+                }
+                
+                var result = await _authService.UpdatePasswordAfterResetAsync(request.Email, request.NewPassword);
+                
+                if (result)
+                {
+                    return Ok(new { message = "Cập nhật mật khẩu thành công" });
+                }
+                else
+                {
+                    return BadRequest(new { message = "Không thể cập nhật mật khẩu" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Update password after reset error for email: {Email}", request.Email);
+                return StatusCode(500, new { message = "Lỗi server" });
+            }
+        }
     }
 } 
