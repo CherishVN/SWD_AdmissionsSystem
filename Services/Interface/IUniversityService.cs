@@ -11,5 +11,6 @@ namespace AdmissionInfoSystem.Services
         Task<University> CreateUniversityAsync(University university);
         Task<University> UpdateUniversityAsync(University university);
         Task DeleteUniversityAsync(int id);
+        Task<University> VerifyUniversityAsync(int id);
     }
 } 

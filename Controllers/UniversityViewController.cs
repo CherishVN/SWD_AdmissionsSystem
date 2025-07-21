@@ -501,6 +501,53 @@ namespace AdmissionInfoSystem.Controllers
             }
         }
 
+        // POST: api/UniversityView/verify-my-university
+        [HttpPost("verify-my-university")]
+        [UniversityAuthorize]
+        public async Task<ActionResult<UniversityDTO>> VerifyMyUniversity()
+        {
+            try
+            {
+                var universityId = await GetUserUniversityId();
+                if (universityId == null)
+                {
+                    return BadRequest(new { message = "Tài khoản chưa được gán trường đại học" });
+                }
+
+                var university = await _universityService.VerifyUniversityAsync(universityId.Value);
+                if (university == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy thông tin trường đại học" });
+                }
+
+                var universityDto = new UniversityDTO
+                {
+                    Id = university.Id,
+                    Name = university.Name,
+                    ShortName = university.ShortName,
+                    Introduction = university.Introduction,
+                    OfficialWebsite = university.OfficialWebsite,
+                    AdmissionWebsite = university.AdmissionWebsite,
+                    Ranking = university.Ranking,
+                    RankingCriteria = university.RankingCriteria,
+                    Locations = university.Locations,
+                    Logo = university.Logo,
+                    Type = university.Type,
+                    IsVerified = university.IsVerified
+                };
+
+                return Ok(new { 
+                    message = "Trường đại học đã được xác thực thành công", 
+                    university = universityDto 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xác thực trường đại học");
+                return StatusCode(500, new { message = "Lỗi server" });
+            }
+        }
+
         #region University Management
         
         // PUT: api/UniversityView/my-university - Cập nhật thông tin trường
