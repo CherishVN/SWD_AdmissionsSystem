@@ -919,9 +919,7 @@ Trợ lý AI:";
                             }
                         }
                         
-                        response.AppendLine("\n---");
-                        response.AppendLine("⚠️ *Lưu ý: Dịch vụ AI tạm thời không khả dụng. Đây là thông tin cơ bản từ cơ sở dữ liệu.*");
-                        response.AppendLine("🔄 *Vui lòng thử lại sau để có câu trả lời chi tiết hơn từ AI.*");
+                       
                         
                         return response.ToString();
                     }
@@ -976,69 +974,185 @@ Trợ lý AI:";
 
         private async Task<string> CallGeminiAPI(string prompt)
         {
+            const int maxRetries = 3;
+            const int baseDelayMs = 1000;
+            
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
+            {
+                try
+                {
+                    var apiKey = _configuration["Gemini:ApiKey"] ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+                    if (string.IsNullOrEmpty(apiKey))
+                    {
+                        return "Xin lỗi, tôi chưa thể kết nối với dịch vụ AI. Vui lòng liên hệ quản trị viên để cấu hình API key.";
+                    }
+
+                    var requestBody = new
+                    {
+                        contents = new[]
+                        {
+                            new
+                            {
+                                parts = new[]
+                                {
+                                    new { text = prompt }
+                                }
+                            }
+                        },
+                        generationConfig = new
+                        {
+                            temperature = 0.7,
+                            topK = 40,
+                            topP = 0.95,
+                            maxOutputTokens = 1024
+                        }
+                    };
+
+                    var json = JsonSerializer.Serialize(requestBody);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    // Set timeout cho HTTP request
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    
+                    var response = await _httpClient.PostAsync(
+                        $"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={apiKey}",
+                        content, cts.Token);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var responseJson = await response.Content.ReadAsStringAsync();
+                        var responseObj = JsonSerializer.Deserialize<JsonElement>(responseJson);
+                        
+                        if (responseObj.TryGetProperty("candidates", out var candidates) &&
+                            candidates.GetArrayLength() > 0)
+                        {
+                            var firstCandidate = candidates[0];
+                            if (firstCandidate.TryGetProperty("content", out var content_prop) &&
+                                content_prop.TryGetProperty("parts", out var parts) &&
+                                parts.GetArrayLength() > 0)
+                            {
+                                var firstPart = parts[0];
+                                if (firstPart.TryGetProperty("text", out var text))
+                                {
+                                    return text.GetString() ?? "Xin lỗi, tôi không thể tạo phản hồi lúc này.";
+                                }
+                            }
+                        }
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable || // 503
+                             response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)      // 429
+                    {
+                        if (attempt < maxRetries)
+                        {
+                            var delay = baseDelayMs * (int)Math.Pow(2, attempt - 1); // Exponential backoff
+                            Console.WriteLine($"DEBUG: API returned {response.StatusCode}, retrying in {delay}ms (attempt {attempt}/{maxRetries})");
+                            await Task.Delay(delay);
+                            continue;
+                        }
+                        else
+                        {
+                            // Nếu Gemini fail hoàn toàn, thử OpenAI
+                            Console.WriteLine("DEBUG: Gemini API failed completely, trying OpenAI fallback...");
+                            return await TryOpenAIFallback(prompt);
+                        }
+                    }
+                    else
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"DEBUG: API error {response.StatusCode}: {errorContent}");
+                        return $"Xin lỗi, tôi gặp sự cố khi xử lý câu hỏi của bạn (Error: {response.StatusCode}). Vui lòng thử lại sau.";
+                    }
+
+                    return "Xin lỗi, tôi gặp sự cố khi xử lý câu hỏi của bạn. Vui lòng thử lại sau.";
+                }
+                catch (OperationCanceledException)
+                {
+                    if (attempt < maxRetries)
+                    {
+                        Console.WriteLine($"DEBUG: Request timeout, retrying (attempt {attempt}/{maxRetries})");
+                        await Task.Delay(baseDelayMs * attempt);
+                        continue;
+                    }
+                    return "Xin lỗi, yêu cầu đã hết thời gian chờ. Vui lòng thử lại.";
+                }
+                catch (HttpRequestException ex)
+                {
+                    if (attempt < maxRetries)
+                    {
+                        Console.WriteLine($"DEBUG: Network error, retrying (attempt {attempt}/{maxRetries}): {ex.Message}");
+                        await Task.Delay(baseDelayMs * attempt);
+                        continue;
+                    }
+                    return "Xin lỗi, có lỗi kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"DEBUG: Unexpected error in CallGeminiAPI (attempt {attempt}): {ex}");
+                    if (attempt < maxRetries)
+                    {
+                        await Task.Delay(baseDelayMs * attempt);
+                        continue;
+                    }
+                    return $"Xin lỗi, tôi gặp lỗi không mong muốn: {ex.Message}. Vui lòng thử lại sau.";
+                }
+            }
+            
+            return "Xin lỗi, tôi không thể xử lý yêu cầu sau nhiều lần thử. Vui lòng thử lại sau.";
+        }
+
+        private async Task<string> TryOpenAIFallback(string prompt)
+        {
             try
             {
-                var apiKey = _configuration["Gemini:ApiKey"] ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY");
-                if (string.IsNullOrEmpty(apiKey))
+                var openAiKey = _configuration["OpenAI:ApiKey"] ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+                if (string.IsNullOrEmpty(openAiKey))
                 {
-                    return "Xin lỗi, tôi chưa thể kết nối với dịch vụ AI. Vui lòng liên hệ quản trị viên để cấu hình API key.";
+                    return GenerateFallbackResponse(prompt);
                 }
 
                 var requestBody = new
                 {
-                    contents = new[]
+                    model = "gpt-3.5-turbo",
+                    messages = new[]
                     {
-                        new
-                        {
-                            parts = new[]
-                            {
-                                new { text = prompt }
-                            }
-                        }
+                        new { role = "user", content = prompt }
                     },
-                    generationConfig = new
-                    {
-                        temperature = 0.7,
-                        topK = 40,
-                        topP = 0.95,
-                        maxOutputTokens = 1024
-                    }
+                    max_tokens = 1000,
+                    temperature = 0.7
                 };
 
                 var json = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
+                
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {openAiKey}");
 
-                var response = await _httpClient.PostAsync(
-                    $"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={apiKey}",
-                    content);
+                var response = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var responseJson = await response.Content.ReadAsStringAsync();
                     var responseObj = JsonSerializer.Deserialize<JsonElement>(responseJson);
                     
-                    if (responseObj.TryGetProperty("candidates", out var candidates) &&
-                        candidates.GetArrayLength() > 0)
+                    if (responseObj.TryGetProperty("choices", out var choices) &&
+                        choices.GetArrayLength() > 0)
                     {
-                        var firstCandidate = candidates[0];
-                        if (firstCandidate.TryGetProperty("content", out var content_prop) &&
-                            content_prop.TryGetProperty("parts", out var parts) &&
-                            parts.GetArrayLength() > 0)
+                        var firstChoice = choices[0];
+                        if (firstChoice.TryGetProperty("message", out var message) &&
+                            message.TryGetProperty("content", out var messageContent))
                         {
-                            var firstPart = parts[0];
-                            if (firstPart.TryGetProperty("text", out var text))
-                            {
-                                return text.GetString() ?? "Xin lỗi, tôi không thể tạo phản hồi lúc này.";
-                            }
+                            return messageContent.GetString() ?? GenerateFallbackResponse(prompt);
                         }
                     }
                 }
 
-                return "Xin lỗi, tôi gặp sự cố khi xử lý câu hỏi của bạn. Vui lòng thử lại sau.";
+                Console.WriteLine($"DEBUG: OpenAI fallback failed with status: {response.StatusCode}");
+                return GenerateFallbackResponse(prompt);
             }
             catch (Exception ex)
             {
-                return $"Xin lỗi, tôi gặp lỗi: {ex.Message}. Vui lòng thử lại sau.";
+                Console.WriteLine($"DEBUG: OpenAI fallback error: {ex.Message}");
+                return GenerateFallbackResponse(prompt);
             }
         }
     }
