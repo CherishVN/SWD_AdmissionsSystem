@@ -75,6 +75,16 @@ CÁCH TRẢ LỜI:
 - Luôn tận dụng tối đa dữ liệu có sẵn
 - Với câu hỏi tham chiếu, hãy xem lịch sử chat để hiểu người dùng đang hỏi về trường nào
 
+XỬ LÝ CÂU HỎI SỐ LƯỢNG NGÀNH:
+- Khi hỏi 'trường X có bao nhiều ngành', trả lời: 'Trường X có [số] ngành đào tạo:' rồi liệt kê tất cả
+- KHÔNG chỉ nói số lượng mà phải liệt kê chi tiết từng ngành
+- Format: '1. Tên ngành (Mã) - Điểm chuẩn: X điểm'
+
+XỬ LÝ CÂU HỎI LIỆT KÊ TRƯỜNG:
+- Khi hỏi 'các trường tư là', 'danh sách trường công', 'liệt kê trường tư thục' - PHẢI liệt kê đầy đủ
+- KHÔNG nói 'không có thông tin' khi đã có dữ liệu trong ngữ cảnh
+- Format: '1. Tên trường (Mã viết tắt)' + giới thiệu ngắn
+
 VÍ DỤ TRẢ LỜI TỐT:
 ❌ 'Tôi xin lỗi, dữ liệu không có...', 'hệ thống chưa cập nhật...'
 ✅ 'Dựa trên dữ liệu tuyển sinh, Đại học FPT có ngành Kỹ thuật phần mềm (tương đương CNTT) với điểm chuẩn...'
@@ -124,6 +134,8 @@ Nhiệm vụ:
                         mentionedUniversities.Add("Bách Khoa");
                     if (msg.Message.Contains("Kinh tế", StringComparison.OrdinalIgnoreCase))
                         mentionedUniversities.Add("Kinh tế");
+                    if (msg.Message.Contains("HUFLIT", StringComparison.OrdinalIgnoreCase))
+                        mentionedUniversities.Add("HUFLIT");
                     // Thêm các trường khác nếu cần
                 }
 
@@ -214,80 +226,130 @@ Trợ lý AI:";
                     (query.Contains("các", StringComparison.OrdinalIgnoreCase) && 
                      !query.Contains("trường", StringComparison.OrdinalIgnoreCase));
                 
-                // Nếu là câu hỏi tham chiếu, mở rộng tìm kiếm để bao gồm tất cả dữ liệu
+                // Nếu là câu hỏi tham chiếu, xử lý thông qua lịch sử chat thay vì load toàn bộ database
                 if (isReferenceQuery)
                 {
-                    Console.WriteLine("DEBUG: Reference query detected, expanding search scope");
-                    
-                    // Lấy tất cả dữ liệu từ database để AI có thể tham chiếu
-                    var allUniversities = await _universityRepository.GetAllAsync();
-                    var allMajors = await _majorRepository.GetAllAsync();
-                    var allScores = await _admissionScoreRepository.GetAllAsync();
-                    
-                    Console.WriteLine($"DEBUG: Loaded all data - Universities: {allUniversities?.Count()}, Majors: {allMajors?.Count()}, Scores: {allScores?.Count()}");
-                    
-                    // Thêm thông tin về tất cả trường đại học
-                    if (allUniversities?.Any() == true)
-                    {
-                        context.AppendLine("THÔNG TIN CÁC TRƯỜNG ĐẠI HỌC:");
-                        foreach (var uni in allUniversities.Take(10)) // Giới hạn 10 trường để tránh quá dài
-                        {
-                            context.AppendLine($"🏫 {uni.Name} ({uni.ShortName})");
-                            if (!string.IsNullOrEmpty(uni.Introduction))
-                                context.AppendLine($"  Giới thiệu: {uni.Introduction.Substring(0, Math.Min(100, uni.Introduction.Length))}...");
-                            context.AppendLine($"  Loại: {uni.Type}");
-                            if (uni.Ranking.HasValue)
-                                context.AppendLine($"  Xếp hạng: {uni.Ranking}");
-                        }
-                        context.AppendLine();
-                    }
-                    
-                    // Thêm thông tin về tất cả ngành học
-                    if (allMajors?.Any() == true)
-                    {
-                        context.AppendLine("THÔNG TIN CÁC NGÀNH HỌC:");
-                        var majorsByUniversity = allMajors.GroupBy(m => m.University?.Name ?? "Không xác định").Take(5);
-                        foreach (var group in majorsByUniversity)
-                        {
-                            context.AppendLine($"🎓 {group.Key}:");
-                            foreach (var major in group.Take(10))
-                            {
-                                context.AppendLine($"  - {major.Name} ({major.Code})");
-                                if (!string.IsNullOrEmpty(major.Description))
-                                    context.AppendLine($"    Mô tả: {major.Description.Substring(0, Math.Min(80, major.Description.Length))}...");
-                                if (major.AdmissionScore.HasValue)
-                                    context.AppendLine($"    Điểm chuẩn: {major.AdmissionScore}");
-                            }
-                        }
-                        context.AppendLine();
-                    }
-                    
-                    // Thêm thông tin điểm chuẩn chi tiết
-                    if (allScores?.Any() == true)
-                    {
-                        context.AppendLine("THÔNG TIN ĐIỂM CHUẨN CHI TIẾT:");
-                        var scoresByUniversity = allScores.GroupBy(s => s.Major?.University?.Name ?? "Không xác định").Take(5);
-                        foreach (var group in scoresByUniversity)
-                        {
-                            context.AppendLine($"📊 {group.Key}:");
-                            foreach (var score in group.Take(10))
-                            {
-                                context.AppendLine($"  - {score.Major?.Name}: {score.Score} điểm ({score.Year})");
-                                if (score.AdmissionMethod != null)
-                                    context.AppendLine($"    Phương thức: {score.AdmissionMethod.Name}");
-                            }
-                        }
-                        context.AppendLine();
-                    }
-                    
-                    var referenceResult = context.ToString();
-                    Console.WriteLine($"DEBUG: Reference query result length: {referenceResult.Length} characters");
-                    return referenceResult;
+                    Console.WriteLine("DEBUG: Reference query detected - will be handled by chat history context");
+                    // Không return ở đây, tiếp tục với logic search thông thường
+                    // AI sẽ sử dụng lịch sử chat để hiểu ngữ cảnh
                 }
 
                 // Tiếp tục với logic tìm kiếm thông thường...
                 var universities = await _universityRepository.GetAllAsync();
                 Console.WriteLine($"DEBUG: Found {universities?.Count() ?? 0} universities in database");
+                
+                // Xử lý câu hỏi thống kê về số lượng trường theo loại
+                if ((query.Contains("bao nhiêu trường", StringComparison.OrdinalIgnoreCase) ||
+                     query.Contains("có mấy trường", StringComparison.OrdinalIgnoreCase) ||
+                     query.Contains("các trường", StringComparison.OrdinalIgnoreCase) ||
+                     query.Contains("liệt kê trường", StringComparison.OrdinalIgnoreCase) ||
+                     query.Contains("danh sách trường", StringComparison.OrdinalIgnoreCase)) &&
+                    (query.Contains("công", StringComparison.OrdinalIgnoreCase) ||
+                     query.Contains("tư", StringComparison.OrdinalIgnoreCase) ||
+                     query.Contains("lập", StringComparison.OrdinalIgnoreCase)))
+                {
+                    if (universities?.Any() == true)
+                    {
+                        context.AppendLine("THỐNG KÊ SỐ LƯỢNG TRƯỜNG THEO LOẠI:");
+                        
+                        var publicUniversities = universities.Where(u => 
+                            u.Type.Contains("Công lập", StringComparison.OrdinalIgnoreCase) ||
+                            u.Type.Contains("Công", StringComparison.OrdinalIgnoreCase)).ToList();
+                        
+                        var privateUniversities = universities.Where(u => 
+                            u.Type.Contains("Tư thục", StringComparison.OrdinalIgnoreCase) ||
+                            u.Type.Contains("Tư", StringComparison.OrdinalIgnoreCase)).ToList();
+                        
+                        // Nếu hỏi cụ thể về trường tư
+                        if (query.Contains("tư", StringComparison.OrdinalIgnoreCase) && 
+                            !query.Contains("công", StringComparison.OrdinalIgnoreCase))
+                        {
+                            context.AppendLine($"🏢 **DANH SÁCH CÁC TRƯỜNG TƯ THỤC** ({privateUniversities.Count} trường):");
+                            if (privateUniversities.Any())
+                            {
+                                int count = 1;
+                                foreach (var uni in privateUniversities)
+                                {
+                                    context.AppendLine($"  {count}. {uni.Name} ({uni.ShortName})");
+                                    if (!string.IsNullOrEmpty(uni.Introduction))
+                                        context.AppendLine($"     Giới thiệu: {uni.Introduction.Substring(0, Math.Min(100, uni.Introduction.Length))}...");
+                                    count++;
+                                }
+                            }
+                            else
+                            {
+                                context.AppendLine("  Không tìm thấy trường tư thục nào trong hệ thống.");
+                            }
+                        }
+                        // Nếu hỏi cụ thể về trường công
+                        else if (query.Contains("công", StringComparison.OrdinalIgnoreCase) && 
+                                 !query.Contains("tư", StringComparison.OrdinalIgnoreCase))
+                        {
+                            context.AppendLine($"🏛️ **DANH SÁCH CÁC TRƯỜNG CÔNG LẬP** ({publicUniversities.Count} trường):");
+                            if (publicUniversities.Any())
+                            {
+                                int count = 1;
+                                foreach (var uni in publicUniversities.Take(20)) // Giới hạn 20 trường đầu
+                                {
+                                    context.AppendLine($"  {count}. {uni.Name} ({uni.ShortName})");
+                                    if (!string.IsNullOrEmpty(uni.Introduction))
+                                        context.AppendLine($"     Giới thiệu: {uni.Introduction.Substring(0, Math.Min(100, uni.Introduction.Length))}...");
+                                    count++;
+                                }
+                                if (publicUniversities.Count > 20)
+                                {
+                                    context.AppendLine($"  ... và {publicUniversities.Count - 20} trường công lập khác");
+                                }
+                            }
+                            else
+                            {
+                                context.AppendLine("  Không tìm thấy trường công lập nào trong hệ thống.");
+                            }
+                        }
+                        // Nếu hỏi về cả hai loại
+                        else
+                        {
+                            context.AppendLine($"🏛️ **Trường Công lập**: {publicUniversities.Count} trường");
+                            if (publicUniversities.Any())
+                            {
+                                context.AppendLine("Danh sách trường công lập:");
+                                foreach (var uni in publicUniversities.Take(10))
+                                {
+                                    context.AppendLine($"  • {uni.Name} ({uni.ShortName})");
+                                }
+                                if (publicUniversities.Count > 10)
+                                {
+                                    context.AppendLine($"  ... và {publicUniversities.Count - 10} trường khác");
+                                }
+                                context.AppendLine();
+                            }
+                            
+                            context.AppendLine($"🏢 **Trường Tư thục**: {privateUniversities.Count} trường");
+                            if (privateUniversities.Any())
+                            {
+                                context.AppendLine("Danh sách trường tư thục:");
+                                foreach (var uni in privateUniversities.Take(10))
+                                {
+                                    context.AppendLine($"  • {uni.Name} ({uni.ShortName})");
+                                }
+                                if (privateUniversities.Count > 10)
+                                {
+                                    context.AppendLine($"  ... và {privateUniversities.Count - 10} trường khác");
+                                }
+                                context.AppendLine();
+                            }
+                            
+                            context.AppendLine($"📊 **Tổng cộng**: {universities.Count()} trường đại học");
+                        }
+                        
+                        context.AppendLine();
+                        
+                        var statisticsResult = context.ToString();
+                        Console.WriteLine($"DEBUG: University statistics result length: {statisticsResult.Length} characters");
+                        return statisticsResult;
+                    }
+                }
+                
                 var relevantUniversities = universities.Where(u => 
                     u.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                     u.Introduction?.Contains(query, StringComparison.OrdinalIgnoreCase) == true ||
@@ -894,12 +956,69 @@ Trợ lý AI:";
         {
             try
             {
+                // Xử lý câu hỏi về danh sách trường
+                if (prompt.Contains("THỐNG KÊ SỐ LƯỢNG TRƯỜNG THEO LOẠI:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var startIndex = prompt.IndexOf("THỐNG KÊ SỐ LƯỢNG TRƯỜNG THEO LOẠI:");
+                    var endIndex = prompt.IndexOf("Lịch sử cuộc trò chuyện:");
+                    
+                    if (startIndex != -1 && endIndex != -1)
+                    {
+                        var dataSection = prompt.Substring(startIndex, endIndex - startIndex);
+                        var response = new StringBuilder();
+                        
+                        // Debug: In ra 500 ký tự đầu để xem format
+                        Console.WriteLine($"DEBUG: Data section preview (first 500 chars): {dataSection.Substring(0, Math.Min(500, dataSection.Length))}");
+                        
+                        response.AppendLine("📋 **Thông tin từ hệ thống:**\n");
+                        
+                        var lines = dataSection.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var line in lines)
+                        {
+                            var trimmedLine = line.Trim();
+                            // Lấy tất cả dòng có thông tin hữu ích
+                            if (trimmedLine.Contains("**DANH SÁCH") || 
+                                trimmedLine.Contains("trường):") ||
+                                trimmedLine.Contains("🏢") ||
+                                trimmedLine.Contains("🏛️") ||
+                                trimmedLine.Contains("📊") ||
+                                // Dòng bắt đầu bằng số (VD: "  1. Đại học...")
+                                (line.StartsWith("  ") && char.IsDigit(line.Trim().FirstOrDefault())) ||
+                                // Dòng giới thiệu (VD: "     Giới thiệu:")
+                                (line.StartsWith("     ") && line.Contains("Giới thiệu:")) ||
+                                // Dòng có tên trường (chứa "Trường" hoặc "Đại học")
+                                (line.StartsWith("  ") && (line.Contains("Trường") || line.Contains("Đại học"))))
+                            {
+                                response.AppendLine(line); // Giữ nguyên format gốc với spaces
+                            }
+                        }
+                        
+                        response.AppendLine("\n---");
+                        response.AppendLine("⚠️ *Dịch vụ AI tạm thời quá tải. Trên đây là thông tin trực tiếp từ cơ sở dữ liệu.*");
+                        response.AppendLine("🔄 *Vui lòng thử lại sau để có phân tích chi tiết hơn từ AI.*");
+                        
+                        return response.ToString();
+                    }
+                }
+                
                 // Trích xuất dữ liệu từ prompt để tạo phản hồi fallback
                 if (prompt.Contains("THÔNG TIN NGÀNH HỌC:", StringComparison.OrdinalIgnoreCase))
                 {
                     // Tìm phần dữ liệu ngành học trong prompt
                     var startIndex = prompt.IndexOf("THÔNG TIN NGÀNH HỌC:");
-                    var endIndex = prompt.IndexOf("Lịch sử cuộc trò chuyện:");
+                    var endIndex = prompt.IndexOf("THÔNG TIN HỌC PHÍ:");
+                    
+                    // Nếu không có phần học phí, tìm phần điểm chuẩn
+                    if (endIndex == -1)
+                    {
+                        endIndex = prompt.IndexOf("THÔNG TIN ĐIỂM CHUẨN:");
+                    }
+                    
+                    // Nếu vẫn không có, tìm lịch sử chat
+                    if (endIndex == -1)
+                    {
+                        endIndex = prompt.IndexOf("Lịch sử cuộc trò chuyện:");
+                    }
                     
                     if (startIndex != -1 && endIndex != -1)
                     {
@@ -911,15 +1030,19 @@ Trợ lý AI:";
                         
                         response.AppendLine("📚 **Thông tin từ hệ thống:**\n");
                         
-                        foreach (var line in lines.Take(20)) // Lấy 20 dòng đầu
+                        // Lấy tất cả dòng có thông tin hữu ích, không giới hạn 20 dòng
+                        foreach (var line in lines)
                         {
-                            if (line.Contains("🏫") || line.Contains("•") || line.Contains("Điểm chuẩn:") || line.Contains("Mô tả:"))
+                            var trimmedLine = line.Trim();
+                            if (trimmedLine.Contains("🏫") || 
+                                trimmedLine.Contains("•") || 
+                                trimmedLine.Contains("Điểm chuẩn:") || 
+                                trimmedLine.Contains("Mô tả:") ||
+                                (trimmedLine.StartsWith("  ") && (trimmedLine.Contains("điểm") || trimmedLine.Contains("VND") || trimmedLine.Contains("năm"))))
                             {
-                                response.AppendLine(line.Trim());
+                                response.AppendLine(trimmedLine);
                             }
                         }
-                        
-                       
                         
                         return response.ToString();
                     }
@@ -939,16 +1062,21 @@ Trợ lý AI:";
                         response.AppendLine("📊 **Điểm chuẩn từ hệ thống:**\n");
                         
                         var lines = dataSection.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                        foreach (var line in lines.Take(15))
+                        foreach (var line in lines)
                         {
-                            if (line.Contains("🏫") || line.Contains("•") || line.Contains("Năm") || line.Contains("điểm"))
+                            var trimmedLine = line.Trim();
+                            if (trimmedLine.Contains("🏫") || 
+                                trimmedLine.Contains("•") || 
+                                trimmedLine.Contains("Năm") || 
+                                trimmedLine.Contains("điểm") ||
+                                trimmedLine.Contains("Tổ hợp môn:") ||
+                                trimmedLine.Contains("Phương thức:"))
                             {
-                                response.AppendLine(line.Trim());
+                                response.AppendLine(trimmedLine);
                             }
                         }
                         
                         response.AppendLine("\n---");
-                        response.AppendLine("⚠️ *Dịch vụ AI tạm thời không khả dụng. Vui lòng thử lại sau.*");
                         
                         return response.ToString();
                     }
