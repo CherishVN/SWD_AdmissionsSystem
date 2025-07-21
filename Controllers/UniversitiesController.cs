@@ -34,13 +34,14 @@ namespace AdmissionInfoSystem.Controllers
                 RankingCriteria = u.RankingCriteria,
                 Locations = u.Locations,
                 Logo = u.Logo,
-                Type = u.Type
+                Type = u.Type,
+                IsVerified = u.IsVerified
             });
 
             return Ok(universityDtos);
         }
 
-        // GET: api/Universities/type/Công lập
+        // GET: api/Universities/type/{type}
         [HttpGet("type/{type}")]
         public async Task<ActionResult<IEnumerable<UniversityDTO>>> GetUniversitiesByType(string type)
         {
@@ -66,7 +67,8 @@ namespace AdmissionInfoSystem.Controllers
                     RankingCriteria = u.RankingCriteria,
                     Locations = u.Locations,
                     Logo = u.Logo,
-                    Type = u.Type
+                    Type = u.Type,
+                    IsVerified = u.IsVerified
                 });
 
                 return Ok(universityDtos);
@@ -100,7 +102,8 @@ namespace AdmissionInfoSystem.Controllers
                 RankingCriteria = university.RankingCriteria,
                 Locations = university.Locations,
                 Logo = university.Logo,
-                Type = university.Type
+                Type = university.Type,
+                IsVerified = university.IsVerified
             };
 
             return universityDto;

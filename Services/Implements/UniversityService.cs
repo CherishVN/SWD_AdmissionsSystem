@@ -51,5 +51,17 @@ namespace AdmissionInfoSystem.Services
             await _unitOfWork.SaveChangesAsync();
             return university;
         }
+
+        public async Task<University> VerifyUniversityAsync(int id)
+        {
+            var university = await _unitOfWork.Universities.GetByIdAsync(id);
+            if (university != null)
+            {
+                university.IsVerified = true;
+                await _unitOfWork.Universities.UpdateAsync(university);
+                await _unitOfWork.SaveChangesAsync();
+            }
+            return university;
+        }
     }
 } 

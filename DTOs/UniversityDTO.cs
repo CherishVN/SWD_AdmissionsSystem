@@ -18,6 +18,7 @@ namespace AdmissionInfoSystem.DTOs
         [Required]
         [MaxLength(20)]
         public string Type { get; set; } = "Công lập";
+        public bool IsVerified { get; set; } = false;
     }
 
     public class CreateUniversityDTO
