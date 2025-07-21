@@ -642,6 +642,9 @@ namespace AdmissionInfoSystem.Controllers
                     return NotFound(new { message = "Không tìm thấy chương trình hoặc không thuộc trường của bạn" });
                 }
 
+                // Detach existing entity để tránh tracking conflict
+                _context.Entry(existingProgram).State = EntityState.Detached;
+                
                 program.UniversityId = universityId.Value;
                 await _programService.UpdateAsync(program);
                 return NoContent();
@@ -734,6 +737,9 @@ namespace AdmissionInfoSystem.Controllers
                     return NotFound(new { message = "Không tìm thấy ngành học hoặc không thuộc trường của bạn" });
                 }
 
+                // Detach existing entity để tránh tracking conflict
+                _context.Entry(existingMajor).State = EntityState.Detached;
+                
                 major.UniversityId = universityId.Value;
                 await _majorService.UpdateAsync(major);
                 return NoContent();
@@ -826,6 +832,9 @@ namespace AdmissionInfoSystem.Controllers
                     return NotFound(new { message = "Không tìm thấy phương thức tuyển sinh hoặc không thuộc trường của bạn" });
                 }
 
+                // Detach existing entity để tránh tracking conflict
+                _context.Entry(existingMethod).State = EntityState.Detached;
+                
                 method.UniversityId = universityId.Value;
                 await _methodService.UpdateAsync(method);
                 return NoContent();
@@ -918,6 +927,9 @@ namespace AdmissionInfoSystem.Controllers
                     return NotFound(new { message = "Không tìm thấy tin tức hoặc không thuộc trường của bạn" });
                 }
 
+                // Detach existing entity để tránh tracking conflict
+                _context.Entry(existingNews).State = EntityState.Detached;
+                
                 news.UniversityId = universityId.Value;
                 await _newsService.UpdateAdmissionNewAsync(news);
                 return NoContent();
@@ -1010,6 +1022,9 @@ namespace AdmissionInfoSystem.Controllers
                     return NotFound(new { message = "Không tìm thấy học bổng hoặc không thuộc trường của bạn" });
                 }
 
+                // Detach existing entity để tránh tracking conflict
+                _context.Entry(existingScholarship).State = EntityState.Detached;
+                
                 scholarship.UniversityId = universityId.Value;
                 await _scholarshipService.UpdateAsync(scholarship);
                 return NoContent();
@@ -1108,11 +1123,20 @@ namespace AdmissionInfoSystem.Controllers
                     return NotFound(new { message = "Không tìm thấy điểm chuẩn hoặc không thuộc trường của bạn" });
                 }
 
+                // Detach existing entity để tránh tracking conflict
+                _context.Entry(existingScore).State = EntityState.Detached;
+                
                 // Kiểm tra major thuộc university
                 var major = await _majorService.GetByIdAsync(score.MajorId);
                 if (major == null || major.UniversityId != universityId)
                 {
                     return BadRequest(new { message = "Ngành học không thuộc trường của bạn" });
+                }
+
+                // Detach major nếu đã được track
+                if (_context.Entry(major).State != EntityState.Detached)
+                {
+                    _context.Entry(major).State = EntityState.Detached;
                 }
 
                 await _scoreService.UpdateAsync(score);
@@ -1212,11 +1236,20 @@ namespace AdmissionInfoSystem.Controllers
                     return NotFound(new { message = "Không tìm thấy tiêu chí tuyển sinh hoặc không thuộc trường của bạn" });
                 }
 
+                // Detach existing entity để tránh tracking conflict
+                _context.Entry(existingCriteria).State = EntityState.Detached;
+                
                 // Kiểm tra admission method thuộc university
                 var method = await _methodService.GetByIdAsync(criteria.AdmissionMethodId);
                 if (method == null || method.UniversityId != universityId)
                 {
                     return BadRequest(new { message = "Phương thức tuyển sinh không thuộc trường của bạn" });
+                }
+
+                // Detach method nếu đã được track
+                if (_context.Entry(method).State != EntityState.Detached)
+                {
+                    _context.Entry(method).State = EntityState.Detached;
                 }
 
                 await _criteriaService.UpdateAsync(criteria);
@@ -1257,6 +1290,7 @@ namespace AdmissionInfoSystem.Controllers
                 return StatusCode(500, new { message = "Lỗi khi xóa tiêu chí tuyển sinh", error = ex.Message });
             }
         }
+        
 
         #endregion
 

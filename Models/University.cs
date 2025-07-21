@@ -39,6 +39,7 @@ namespace AdmissionInfoSystem.Models
         [Required]
         [MaxLength(20)]
         public string Type { get; set; } = "Công lập";
+        public bool IsVerified { get; set; } = false;
         
         // Navigation properties
         public virtual ICollection<AdmissionNew> AdmissionNews { get; set; } = new List<AdmissionNew>();
