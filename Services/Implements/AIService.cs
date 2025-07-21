@@ -468,12 +468,7 @@ Trợ lý AI:";
                             
                             if (!importantWords.Any()) return false;
                             
-                            // Debug: Chỉ in cho một số trường quan tâm
-                            if (m.University.Name.Contains("Ngân", StringComparison.OrdinalIgnoreCase) || 
-                                m.University.Name.Contains("Hậu", StringComparison.OrdinalIgnoreCase))
-                            {
-                                Console.WriteLine($"DEBUG: Important words for '{m.University.Name}': [{string.Join(", ", importantWords)}]");
-                            }
+                            // Debug: Đã loại bỏ để tránh spam log
                             
                             // Kiểm tra xem có ít nhất 70% từ quan trọng khớp không (linh hoạt hơn)
                             var universityWords = m.University.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -483,10 +478,7 @@ Trợ lý AI:";
                             var matchRatio = (double)matchedWords.Count / importantWords.Count;
                             var isMatch = matchRatio >= 0.7; // Cần ít nhất 70% từ khớp
                             
-                            if (isMatch)
-                            {
-                                Console.WriteLine($"DEBUG: MATCH found for '{m.University.Name}' with ratio {matchRatio:P1} - matched: [{string.Join(", ", matchedWords)}]");
-                            }
+                            // Đã tìm thấy match - sẽ được log tổng hợp sau
                             
                             return isMatch;
                         }).ToList();
@@ -896,6 +888,90 @@ Trợ lý AI:";
             Console.WriteLine($"DEBUG: Final context length: {result.Length} characters");
             Console.WriteLine($"DEBUG: Context content preview: {result.Substring(0, Math.Min(200, result.Length))}...");
             return result;
+        }
+
+        private string GenerateFallbackResponse(string prompt)
+        {
+            try
+            {
+                // Trích xuất dữ liệu từ prompt để tạo phản hồi fallback
+                if (prompt.Contains("THÔNG TIN NGÀNH HỌC:", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Tìm phần dữ liệu ngành học trong prompt
+                    var startIndex = prompt.IndexOf("THÔNG TIN NGÀNH HỌC:");
+                    var endIndex = prompt.IndexOf("Lịch sử cuộc trò chuyện:");
+                    
+                    if (startIndex != -1 && endIndex != -1)
+                    {
+                        var dataSection = prompt.Substring(startIndex, endIndex - startIndex);
+                        
+                        // Trích xuất thông tin cơ bản từ context
+                        var lines = dataSection.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                        var response = new StringBuilder();
+                        
+                        response.AppendLine("📚 **Thông tin từ hệ thống:**\n");
+                        
+                        foreach (var line in lines.Take(20)) // Lấy 20 dòng đầu
+                        {
+                            if (line.Contains("🏫") || line.Contains("•") || line.Contains("Điểm chuẩn:") || line.Contains("Mô tả:"))
+                            {
+                                response.AppendLine(line.Trim());
+                            }
+                        }
+                        
+                        response.AppendLine("\n---");
+                        response.AppendLine("⚠️ *Lưu ý: Dịch vụ AI tạm thời không khả dụng. Đây là thông tin cơ bản từ cơ sở dữ liệu.*");
+                        response.AppendLine("🔄 *Vui lòng thử lại sau để có câu trả lời chi tiết hơn từ AI.*");
+                        
+                        return response.ToString();
+                    }
+                }
+                
+                // Trích xuất thông tin điểm chuẩn
+                if (prompt.Contains("THÔNG TIN ĐIỂM CHUẨN:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var startIndex = prompt.IndexOf("THÔNG TIN ĐIỂM CHUẨN:");
+                    var endIndex = prompt.IndexOf("Lịch sử cuộc trò chuyện:");
+                    
+                    if (startIndex != -1 && endIndex != -1)
+                    {
+                        var dataSection = prompt.Substring(startIndex, endIndex - startIndex);
+                        var response = new StringBuilder();
+                        
+                        response.AppendLine("📊 **Điểm chuẩn từ hệ thống:**\n");
+                        
+                        var lines = dataSection.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var line in lines.Take(15))
+                        {
+                            if (line.Contains("🏫") || line.Contains("•") || line.Contains("Năm") || line.Contains("điểm"))
+                            {
+                                response.AppendLine(line.Trim());
+                            }
+                        }
+                        
+                        response.AppendLine("\n---");
+                        response.AppendLine("⚠️ *Dịch vụ AI tạm thời không khả dụng. Vui lòng thử lại sau.*");
+                        
+                        return response.ToString();
+                    }
+                }
+                
+                // Phản hồi mặc định với hướng dẫn
+                return @"🤖 **Xin lỗi, dịch vụ AI hiện tại đang quá tải.**
+
+📋 **Bạn có thể thử:**
+• Thử lại sau vài phút
+• Liên hệ trực tiếp với trường đại học
+• Truy cập website chính thức của trường
+
+🔄 **Hệ thống đã tìm thấy thông tin liên quan, nhưng cần AI để phân tích chi tiết.**
+
+💡 **Gợi ý:** Hãy thử lại sau để có câu trả lời đầy đủ từ trợ lý AI!";
+            }
+            catch
+            {
+                return "Xin lỗi, dịch vụ AI hiện tại đang quá tải. Vui lòng thử lại sau ít phút.";
+            }
         }
 
         private async Task<string> CallGeminiAPI(string prompt)
