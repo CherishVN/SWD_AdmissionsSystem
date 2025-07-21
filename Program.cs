@@ -167,6 +167,23 @@ namespace AdmissionInfoSystem
 
             //app.UseHttpsRedirection();
 
+            // Serve static files
+            app.UseStaticFiles(); // Serve files từ wwwroot
+            
+            // Ensure uploads directory exists
+            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+            
+            // Serve uploaded files
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsPath),
+                RequestPath = "/uploads"
+            });
+
             // Use CORS
             app.UseCors("AllowAll");
 
