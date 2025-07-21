@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using AdmissionInfoSystem.Attributes;
 
 namespace AdmissionInfoSystem.Controllers
@@ -17,7 +18,7 @@ namespace AdmissionInfoSystem.Controllers
         }
 
         [HttpPost("upload-logo")]
-        [AdminAuthorize]
+        [Authorize] // Cho phép cả admin và university user
         public async Task<IActionResult> UploadLogo(IFormFile file)
         {
             try
@@ -76,7 +77,7 @@ namespace AdmissionInfoSystem.Controllers
         }
 
         [HttpDelete("delete-logo/{fileName}")]
-        [AdminAuthorize]
+        [Authorize] // Cho phép cả admin và university user
         public IActionResult DeleteLogo(string fileName)
         {
             try
