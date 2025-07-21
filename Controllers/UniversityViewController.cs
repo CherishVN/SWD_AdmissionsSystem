@@ -1072,7 +1072,7 @@ namespace AdmissionInfoSystem.Controllers
         // POST: api/UniversityView/my-admission-scores - Tạo điểm chuẩn mới
         [HttpPost("my-admission-scores")]
         [UniversityAuthorize]
-        public async Task<ActionResult<AdmissionScore>> CreateMyAdmissionScore(AdmissionScore score)
+        public async Task<ActionResult<AdmissionScore>> CreateMyAdmissionScore(CreateAdmissionScoreDTO createDto)
         {
             try
             {
@@ -1082,12 +1082,27 @@ namespace AdmissionInfoSystem.Controllers
                     return BadRequest(new { message = "Tài khoản chưa được gán trường đại học" });
                 }
 
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
                 // Kiểm tra major thuộc university
-                var major = await _majorService.GetByIdAsync(score.MajorId);
+                var major = await _majorService.GetByIdAsync(createDto.MajorId);
                 if (major == null || major.UniversityId != universityId)
                 {
                     return BadRequest(new { message = "Ngành học không thuộc trường của bạn" });
                 }
+
+                var score = new AdmissionScore
+                {
+                    MajorId = createDto.MajorId,
+                    Year = createDto.Year,
+                    Score = createDto.Score,
+                    AdmissionMethodId = createDto.AdmissionMethodId,
+                    Note = createDto.Note,
+                    SubjectCombination = createDto.SubjectCombination
+                };
 
                 var createdScore = await _scoreService.CreateAsync(score);
                 return CreatedAtAction(nameof(GetMyAdmissionScores), createdScore);
@@ -1102,7 +1117,7 @@ namespace AdmissionInfoSystem.Controllers
         // PUT: api/UniversityView/my-admission-scores/{id} - Cập nhật điểm chuẩn
         [HttpPut("my-admission-scores/{id}")]
         [UniversityAuthorize]
-        public async Task<IActionResult> UpdateMyAdmissionScore(int id, AdmissionScore score)
+        public async Task<IActionResult> UpdateMyAdmissionScore(int id, UpdateAdmissionScoreDTO updateDto)
         {
             try
             {
@@ -1112,9 +1127,14 @@ namespace AdmissionInfoSystem.Controllers
                     return BadRequest(new { message = "Tài khoản chưa được gán trường đại học" });
                 }
 
-                if (id != score.Id)
+                if (id != updateDto.Id)
                 {
                     return BadRequest(new { message = "ID không khớp" });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
                 }
 
                 var existingScore = await _scoreService.GetByIdAsync(id);
@@ -1127,7 +1147,7 @@ namespace AdmissionInfoSystem.Controllers
                 _context.Entry(existingScore).State = EntityState.Detached;
                 
                 // Kiểm tra major thuộc university
-                var major = await _majorService.GetByIdAsync(score.MajorId);
+                var major = await _majorService.GetByIdAsync(updateDto.MajorId);
                 if (major == null || major.UniversityId != universityId)
                 {
                     return BadRequest(new { message = "Ngành học không thuộc trường của bạn" });
@@ -1138,6 +1158,17 @@ namespace AdmissionInfoSystem.Controllers
                 {
                     _context.Entry(major).State = EntityState.Detached;
                 }
+
+                var score = new AdmissionScore
+                {
+                    Id = updateDto.Id,
+                    MajorId = updateDto.MajorId,
+                    Year = updateDto.Year,
+                    Score = updateDto.Score,
+                    AdmissionMethodId = updateDto.AdmissionMethodId,
+                    Note = updateDto.Note,
+                    SubjectCombination = updateDto.SubjectCombination
+                };
 
                 await _scoreService.UpdateAsync(score);
                 return NoContent();
